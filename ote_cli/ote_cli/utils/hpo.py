@@ -153,7 +153,7 @@ def run_hpo_trainer(
     # set epoch
     if task_type == TaskType.CLASSIFICATION:
         (hyper_parameters.learning_parameters.max_num_epochs) = hp_config["iterations"]
-    elif task_type == TaskType.DETECTION:
+    elif task_type == TaskType.DETECTION and "bracket" not in hp_config:
         hyper_parameters.learning_parameters.learning_rate_warmup_iters = int(
             hyper_parameters.learning_parameters.learning_rate_warmup_iters
             * hp_config["iterations"]
@@ -274,11 +274,11 @@ def get_HPO_train_task(impl_class, task_type):
                 self._config.checkpoint_config["max_keep_ckpts"] = hp_config["iterations"] + 10
                 self._config.checkpoint_config["interval"] = 1
 
-            if "bracket" in hp_config:
-                if self._task_type == TaskType.DETECTION:
-                    self._config.data.train.adaptive_repeat_times = False
-                elif self._task_type == TaskType.SEGMENTATION:
-                    self._config.data.train.adaptive_repeat = False
+            # if "bracket" in hp_config:
+            #     if self._task_type == TaskType.DETECTION:
+            #         self._config.data.train.adaptive_repeat_times = False
+            #     elif self._task_type == TaskType.SEGMENTATION:
+            #         self._config.data.train.adaptive_repeat = False
 
     return HpoTrainTask
 
@@ -307,9 +307,9 @@ class HpoManager:
         self.dataset_paths = dataset_paths
         self.work_dir = hpo_save_path
 
+        impl_class = get_impl_class(environment.model_template.entrypoints.base)
+        task = impl_class(task_environment=environment)
         if environment.model is None:
-            impl_class = get_impl_class(environment.model_template.entrypoints.base)
-            task = impl_class(task_environment=environment)
             model = ModelEntity(
                 dataset,
                 environment.get_model_configuration(),
@@ -340,8 +340,26 @@ class HpoManager:
 
         self.num_gpus_per_trial = 1
 
-        train_dataset_size = len(dataset.get_subset(Subset.TRAINING))
-        val_dataset_size = len(dataset.get_subset(Subset.VALIDATION))
+        train_dataset = dataset.get_subset(Subset.TRAINING)
+        val_dataset = dataset.get_subset(Subset.VALIDATION)
+        train_dataset_size = len(train_dataset)
+        val_dataset_size = len(val_dataset)
+
+        task_type = self.environment.model_template.task_type
+        max_epoch = None
+        if (task_type == TaskType.DETECTION and
+            task._config.data.train.type == 'RepeatDataset' and
+            getattr(task._config.data.train, 'adaptive_repeat_times', False)
+        ):
+            from detection_tasks.apis.detection.config_utils import prepare_for_training
+            train_config = prepare_for_training(
+                task._config, train_dataset, val_dataset, None, None)
+            max_epoch = train_config.runner.max_epochs
+            if "subset_ratio" not in hpopt_cfg and train_dataset_size <= 500:
+                hpopt_cfg["subset_ratio"] = 1.0
+            train_dataset_size *= train_config.data.train.times
+        elif task_type == TaskType.SEGMENTATION:
+            pass
 
         model_param = (self.environment.
                        model_template.hyper_parameters.
@@ -361,7 +379,8 @@ class HpoManager:
             save_path=self.work_dir,
             max_iterations=hpopt_cfg.get("max_iterations"),
             subset_ratio=hpopt_cfg.get("subset_ratio"),
-            num_full_iterations=HpoManager.get_num_full_iterations(self.environment),
+            num_full_iterations=HpoManager.get_num_full_iterations(
+                self.environment) if max_epoch is None else max_epoch,
             full_dataset_size=train_dataset_size,
             expected_time_ratio=expected_time_ratio,
             non_pure_train_ratio=val_dataset_size
@@ -386,7 +405,6 @@ class HpoManager:
 
             # Prevent each trials from stopped during warmup stage
             if "min_iterations" not in hpopt_cfg:
-                task_type = self.environment.model_template.task_type
                 if task_type == TaskType.CLASSIFICATION:
                     with open(osp.join(osp.dirname(
                         self.environment.model_template.model_template_path

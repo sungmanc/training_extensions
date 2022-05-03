@@ -80,10 +80,10 @@ def run_hpo(args, environment, dataset, task_type):
         environment.set_hyper_parameters(hyper_parameters)
 
         task_class = get_impl_class(environment.model_template.entrypoints.base)
-        task_class = get_HPO_train_task(task_class, task_type)
+        # task_class = get_HPO_train_task(task_class, task_type)
 
         task = task_class(task_environment=environment)
-        task.resume(hpo_weight_path)
+        # task.resume(hpo_weight_path)
 
         if args.load_weights:
             environment.model.configuration.configurable_parameters = hyper_parameters
@@ -560,11 +560,11 @@ class HpoManager:
         best_config = self.hpo.get_best_config()
 
         # Resume weight is already over warm-up stage
-        if task_type == TaskType.DETECTION:
-            best_config["learning_parameters.learning_rate_warmup_iters"] = 0
-        if task_type == TaskType.SEGMENTATION:
-            best_config["learning_parameters.learning_rate_fixed_iters"] = 0
-            best_config["learning_parameters.learning_rate_warmup_iters"] = 0
+        # if task_type == TaskType.DETECTION:
+        #     best_config["learning_parameters.learning_rate_warmup_iters"] = 0
+        # if task_type == TaskType.SEGMENTATION:
+        #     best_config["learning_parameters.learning_rate_fixed_iters"] = 0
+        #     best_config["learning_parameters.learning_rate_warmup_iters"] = 0
 
         hyper_parameters = self.environment.get_hyper_parameters()
         HpoManager.set_hyperparameter(hyper_parameters, best_config)

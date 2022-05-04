@@ -160,7 +160,7 @@ def run_hpo_trainer(
             / hyper_parameters.learning_parameters.num_iters
         )
         hyper_parameters.learning_parameters.num_iters = hp_config["iterations"]
-    elif task_type == TaskType.SEGMENTATION:
+    elif task_type == TaskType.SEGMENTATION "bracket" not in hp_config:
         eph_comp = [
             hyper_parameters.learning_parameters.learning_rate_fixed_iters,
             hyper_parameters.learning_parameters.learning_rate_warmup_iters,

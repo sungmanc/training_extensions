@@ -345,6 +345,11 @@ class HpoManager:
         train_dataset_size = len(train_dataset)
         val_dataset_size = len(val_dataset)
 
+        for key, val in hpopt_cfg['hp_space'].items():
+            if "batch" in key:
+                if val['range'][1] > train_dataset_size:
+                    val['range'][1] = train_dataset_size
+
         task_type = self.environment.model_template.task_type
         max_epoch = None
         if (task_type == TaskType.DETECTION and
@@ -419,8 +424,8 @@ class HpoManager:
                 elif task_type in [TaskType.DETECTION, TaskType.SEGMENTATION]:
                     hpopt_arguments["min_iterations"] = ceil(
                         model_param["learning_rate_warmup_iters"]["default_value"]
-                        * model_param["batch_size"]["default_value"]
-                        / train_dataset_size
+                        / ceil(train_dataset_size
+                               / model_param["batch_size"]["default_value"])
                     )
 
         HpoManager.remove_empty_keys(hpopt_arguments)

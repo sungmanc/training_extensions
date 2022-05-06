@@ -74,6 +74,7 @@ class OTEClassificationInferenceTask(IInferenceTask, IEvaluationTask, IExportTas
             self._labels = task_environment.get_labels(include_empty=True)
         else:
             self._labels = task_environment.get_labels(include_empty=False)
+        print(f"self._labels got from label_schema.get_label : {self._labels}")
         self._empty_label = get_empty_label(task_environment.label_schema)
         self._multilabel = len(task_environment.label_schema.get_groups(False)) > 1 and \
                 len(task_environment.label_schema.get_groups(False)) == \
@@ -149,6 +150,7 @@ class OTEClassificationInferenceTask(IInferenceTask, IEvaluationTask, IExportTas
         :return model: Model in training mode
         """
         num_train_classes = len(self._labels)
+        print(f"num_classes for creating model : {num_train_classes}")
         model = torchreid.models.build_model(**model_kwargs(config, num_train_classes))
         if self._cfg.model.load_weights and not from_scratch:
             load_pretrained_weights(model, self._cfg.model.load_weights)

@@ -101,15 +101,26 @@ class OTEClassificationTrainingTask(OTEClassificationInferenceTask, ITrainingTas
         self.metrics_monitor = DefaultMetricsMonitor()
         self.stop_callback.reset()
 
+        print(f"Len of init dataset : {len(dataset)}")
+
         set_random_seed(self._cfg.train.seed)
         train_subset = dataset.get_subset(Subset.TRAINING)
+        
+        print("Train_subset dataset info... ")
+        for train_d in train_subset:
+            print(train_d)
+
         val_subset = dataset.get_subset(Subset.VALIDATION)
+
         self._cfg.custom_datasets.roots = [OTEClassificationDataset(train_subset, self._labels, self._multilabel,
                                                                     self._hierarchical, self._multihead_class_info,
                                                                     keep_empty_label=self._empty_label in self._labels),
                                            OTEClassificationDataset(val_subset, self._labels, self._multilabel,
                                                                     self._hierarchical, self._multihead_class_info,
                                                                     keep_empty_label=self._empty_label in self._labels)]
+        print(f"Custom dataset for train...")
+        for d in self._cfg.custom_datasets.roots[0]:
+            print(d)
         datamanager = torchreid.data.ImageDataManager(**imagedata_kwargs(self._cfg))
 
         num_aux_models = len(self._cfg.mutual_learning.aux_configs)

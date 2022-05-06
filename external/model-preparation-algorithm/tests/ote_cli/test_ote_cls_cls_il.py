@@ -56,11 +56,15 @@ templates = Registry('external/model-preparation-algorithm').filter(task_type='C
 templates_ids = [template.model_template_id for template in templates]
 
 
-class TestToolsClassification:
+class TestToolsClsClsIncr:
     @e2e_pytest_component
     def test_create_venv(self):
+        print(f'templates[0]: {templates[0]}')
+        print(f'root: {root}')
         work_dir, _, algo_backend_dir = get_some_vars(templates[0], root)
         create_venv(algo_backend_dir, work_dir)
+        print(f'algo_backend_dir: {algo_backend_dir}')
+        print(f'work_dir: {work_dir}')
 
     @e2e_pytest_component
     @pytest.mark.parametrize("template", templates, ids=templates_ids)

@@ -123,6 +123,10 @@ class OTEClassificationTrainingTask(OTEClassificationInferenceTask, ITrainingTas
             print(d)
         datamanager = torchreid.data.ImageDataManager(**imagedata_kwargs(self._cfg))
 
+        print("Get real data(label) from datamanger.train_loader...")
+        for data in datamanager.train_loader:
+            print(f"labels : {data[1]}")
+        
         num_aux_models = len(self._cfg.mutual_learning.aux_configs)
 
         if self._cfg.use_gpu:

@@ -272,7 +272,7 @@ class OTEClassificationDataset:
         self.keep_empty_label = keep_empty_label
         self.label_names = [label.name for label in self.labels]
 
-        for i, _ in enumerate(self.ote_dataset):
+        for i, sample in enumerate(self.ote_dataset):
             class_indices = []
             item_labels = self.ote_dataset[i].get_roi_labels(self.labels,
                                                              include_empty=self.keep_empty_label)
@@ -309,14 +309,14 @@ class OTEClassificationDataset:
                     class_indices.append(-1)
 
             if self.multilabel or self.hierarchical:
-                self.annotation.append({'label': tuple(class_indices)})
+                self.annotation.append({'img': sample.numpy, 'label': tuple(class_indices)})
             else:
-                self.annotation.append({'label': class_indices[0]})
+                if class_indices[0] == -1:
+                    continue
+                self.annotation.append({'img': sample.numpy, 'label': class_indices[0]})
 
     def __getitem__(self, idx):
-        sample = self.ote_dataset[idx].numpy  # This returns 8-bit numpy array of shape (height, width, RGB)
-        label = self.annotation[idx]['label']
-        return {'img': sample, 'label': label}
+        return self.annotation[idx]
 
     def __len__(self):
         return len(self.annotation)

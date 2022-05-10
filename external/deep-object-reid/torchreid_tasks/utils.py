@@ -32,7 +32,7 @@ import numpy as np
 from ote_sdk.entities.annotation import (Annotation, AnnotationSceneEntity,
                                          AnnotationSceneKind)
 from ote_sdk.entities.dataset_item import DatasetItemEntity
-from ote_sdk.entities.datasets import DatasetEntity
+from ote_sdk.entities.datasets import DatasetEntity, DatasetPurpose
 from ote_sdk.entities.id import ID
 from ote_sdk.entities.image import Image
 from ote_sdk.entities.label import Domain, LabelEntity
@@ -311,8 +311,9 @@ class OTEClassificationDataset:
             if self.multilabel or self.hierarchical:
                 self.annotation.append({'img': sample.numpy, 'label': tuple(class_indices)})
             else:
-                if class_indices[0] == -1:
-                    continue
+                if self.ote_dataset.purpose != DatasetPurpose.INFERENCE:
+                    if class_indices[0] == -1:
+                        continue
                 self.annotation.append({'img': sample.numpy, 'label': class_indices[0]})
 
     def __getitem__(self, idx):

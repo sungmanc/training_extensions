@@ -311,9 +311,8 @@ class OTEClassificationDataset:
             if self.multilabel or self.hierarchical:
                 self.annotation.append({'img': sample.numpy, 'label': tuple(class_indices)})
             else:
-                if self.ote_dataset.purpose != DatasetPurpose.INFERENCE:
-                    if class_indices[0] == -1:
-                        continue
+                if item_labels and class_indices[0] == -1:
+                    continue
                 self.annotation.append({'img': sample.numpy, 'label': class_indices[0]})
 
     def __getitem__(self, idx):

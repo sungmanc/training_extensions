@@ -302,6 +302,7 @@ class OTEClassificationDataset:
                                 class_indices[num_cls_heads + in_group_idx] = -1
 
             else: # this supposed to happen only on inference stage or if we have a negative in multilabel data
+                print("No item_labels for this dataset")
                 if self.mixed_cls_heads_info:
                     class_indices = [-1]*(self.mixed_cls_heads_info['num_multiclass_heads'] + \
                                           self.mixed_cls_heads_info['num_multilabel_classes'])
@@ -311,8 +312,10 @@ class OTEClassificationDataset:
             if self.multilabel or self.hierarchical:
                 self.annotation.append({'img': sample.numpy, 'label': tuple(class_indices)})
             else:
-                if sample.subset == Subset.TRAINING and class_indices[0] == -1:
-                    continue
+                if sample.subset == Subset.TRAINING:
+                    if class_indices[0] == -1:
+                        print("Skip adding data, because it is ignored label")
+                        continue
                 self.annotation.append({'img': sample.numpy, 'label': class_indices[0]})
 
     def __getitem__(self, idx):

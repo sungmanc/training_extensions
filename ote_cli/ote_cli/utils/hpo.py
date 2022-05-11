@@ -54,6 +54,7 @@ def run_hpo(args, environment, dataset, task_type):
             TaskType.CLASSIFICATION,
             TaskType.DETECTION,
             TaskType.SEGMENTATION,
+            TaskType.ANOMALY_CLASSIFICATION,
         }:
             print(
                 "Currently supported task types are classification and detection."
@@ -103,8 +104,7 @@ def run_hpo_trainer(
     dataset_paths,
     task_type,
 ):
-    """Run each training of each trial with given hyper parameters"""
-
+    """Run each training of each trial with given hyper parameters"""    
     if isinstance(hyper_parameters, dict):
         current_params = {}
         for val in hyper_parameters["parameters"]:
@@ -139,6 +139,8 @@ def run_hpo_trainer(
     # set epoch
     if task_type == TaskType.CLASSIFICATION:
         (hyper_parameters.learning_parameters.max_num_epochs) = hp_config["iterations"]
+    elif task_type == TaskType.ANOMALY_CLASSIFICATION:
+        (hyper_parameters.trainer.max_epochs) = hp_config["iterations"]
     elif task_type == TaskType.DETECTION:
         hyper_parameters.learning_parameters.num_iters = hp_config["iterations"]
     elif task_type == TaskType.SEGMENTATION:
@@ -297,8 +299,13 @@ class HpoManager:
             expected_time_ratio=expected_time_ratio,
             non_pure_train_ratio=val_dataset_size
             / (train_dataset_size + val_dataset_size),
-            batch_size_name="learning_parameters.batch_size",
         )
+
+        if self.environment.model_template.task_type == TaskType.ANOMALY_CLASSIFICATION:
+            hpopt_arguments['batch_size_name'] = "dataset.batch_size"
+        else:
+            hpopt_arguments['batch_size_name'] = "learning_parameters.batch_size"
+
 
         if self.algo == "smbo":
             hpopt_arguments["num_init_trials"] = hpopt_cfg.get("num_init_trials")
@@ -313,7 +320,6 @@ class HpoManager:
             )
 
         HpoManager.remove_empty_keys(hpopt_arguments)
-
         self.hpo = hpopt.create(**hpopt_arguments)
 
     def check_resumable(self):
@@ -414,17 +420,33 @@ class HpoManager:
                     shutil.rmtree(hpo_work_dir)
                 Path(hpo_work_dir).mkdir(parents=True)
 
-                _kwargs = {
+                if self.environment.model_template.task_type == TaskType.ANOMALY_CLASSIFICATION:
+                    _kwargs = {
                     "hp_config": hp_config,
                     "model": self.environment.model,
-                    "hyper_parameters": vars(
-                        self.environment.get_hyper_parameters().learning_parameters
-                    ),
+                    # "hyper_parameters": None,
+                    "hyper_parameters": {
+                        "learning_rate": self.environment.get_hyper_parameters().model.lr,
+                        "batch_size": self.environment.get_hyper_parameters().dataset.train_batch_size,
+                        "max_epochs": self.environment.get_hyper_parameters().trainer.max_epochs,
+                        "parameters": ['learning_rate','batch_size','max_epochs'],
+                    },
                     "model_template": self.environment.model_template,
                     "dataset_paths": self.dataset_paths,
                     "task_type": self.environment.model_template.task_type,
                 }
-
+                else:
+                    _kwargs = {
+                        "hp_config": hp_config,
+                        "model": self.environment.model,
+                        "hyper_parameters": vars(
+                            self.environment.get_hyper_parameters().learning_parameters
+                        ),
+                        "model_template": self.environment.model_template,
+                        "dataset_paths": self.dataset_paths,
+                        "task_type": self.environment.model_template.task_type,
+                    }
+                
                 pickle_path = HpoManager.safe_pickle_dump(
                     hpo_work_dir, f"hpo_trial_{hp_config['trial_id']}", _kwargs
                 )
@@ -501,13 +523,14 @@ class HpoManager:
     def get_num_full_iterations(environment):
         """Get the number of full iterations for the specified environment"""
         num_full_iterations = 0
-
         task_type = environment.model_template.task_type
-        learning_parameters = environment.get_hyper_parameters().learning_parameters
+        hyperparameters = environment.get_hyper_parameters()
         if task_type == TaskType.CLASSIFICATION:
-            num_full_iterations = learning_parameters.max_num_epochs
+            num_full_iterations = hyperparameters.learning_parameters.max_num_epochs
+        elif task_type == TaskType.ANOMALY_CLASSIFICATION:
+            num_full_iterations = hyperparameters.trainer.max_epochs
         elif task_type in (TaskType.DETECTION, TaskType.SEGMENTATION):
-            num_full_iterations = learning_parameters.num_iters
+            num_full_iterations = hyperparameters.learning_parameters.num_iters
 
         return num_full_iterations
 
@@ -529,10 +552,8 @@ class HpoManager:
         Set given hyper parameter to hyper parameter in environment
         aligning with "ConfigurableParameters".
         """
-
         for param_key, param_val in hp_config.items():
             param_key = param_key.split(".")
-
             target = origin_hp
             for val in param_key[:-1]:
                 target = getattr(target, val)
@@ -665,7 +686,6 @@ def main():
         with open(sys.argv[1], "rb") as pfile:
             kwargs = HpoUnpickler(pfile).load()
             hp_config = kwargs["hp_config"]
-
             run_hpo_trainer(**kwargs)
     except RuntimeError as err:
         if str(err).startswith("CUDA out of memory"):

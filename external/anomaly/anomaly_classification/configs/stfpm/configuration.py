@@ -23,6 +23,7 @@ from ote_sdk.configuration.elements import (
     ParameterGroup,
     add_parameter_group,
     configurable_integer,
+    configurable_float,
     selectable,
     string_attribute,
 )
@@ -37,6 +38,23 @@ class STFPMAnomalyClassificationConfig(BaseAnomalyConfig):
 
     header = string_attribute("Configuration for STFPM")
     description = header
+
+    @attrs
+    class TrainerParameters(ParameterGroup):
+        """
+        Trainer parameters
+        """
+
+        header = string_attribute("Trainer Parameters")
+        description = header
+
+        max_epochs = configurable_integer(
+            default_value=50,
+            min_value=2,
+            max_value=100,
+            header="Max Epochs",
+            affects_outcome_of=ModelLifecycle.TRAINING,
+        )
 
     @attrs
     class ModelParameters(ParameterGroup):
@@ -55,6 +73,14 @@ class STFPMAnomalyClassificationConfig(BaseAnomalyConfig):
 
             header = string_attribute("Early Stopping Parameters")
             description = header
+
+            lr = configurable_float(
+                default_value=0.01,
+                min_value=0.001,
+                max_value=0.1,
+                header="Learning Rate",
+                affects_outcome_of=ModelLifecycle.TRAINING,
+            )
 
             metric = selectable(
                 default_value=EarlyStoppingMetrics.IMAGE_F1,
@@ -78,3 +104,5 @@ class STFPMAnomalyClassificationConfig(BaseAnomalyConfig):
         early_stopping = add_parameter_group(EarlyStoppingParameters)
 
     model = add_parameter_group(ModelParameters)
+    trainer_parameters = add_parameter_group(TrainerParameters)
+

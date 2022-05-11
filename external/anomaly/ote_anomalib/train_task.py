@@ -48,7 +48,7 @@ class AnomalyTrainingTask(AnomalyInferenceTask, ITrainingTask):
 
         config = self.get_config()
         logger.info("Training Configs '%s'", config)
-
+        
         datamodule = OTEAnomalyDataModule(config=config, dataset=dataset, task_type=self.task_type)
         callbacks = [ProgressCallback(parameters=train_parameters), MinMaxNormalizationCallback()]
 

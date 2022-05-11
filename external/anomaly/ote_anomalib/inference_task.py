@@ -272,7 +272,7 @@ class AnomalyInferenceTask(IInferenceTask, IEvaluationTask, IExportTask, IUnload
         output_model.set_data("label_schema.json", label_schema_to_bytes(self.task_environment.label_schema))
         self._set_metadata(output_model)
 
-        f1_score = self.model.image_metrics.F1.compute().item()
+        f1_score = self.model.image_metrics.F1Score.compute().item()
         output_model.performance = Performance(score=ScoreMetric(name="F1 Score", value=f1_score))
         output_model.precision = self.precision
         output_model.optimization_methods = self.optimization_methods

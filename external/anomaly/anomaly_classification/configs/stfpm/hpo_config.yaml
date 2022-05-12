@@ -1,0 +1,16 @@
+metric: AUROC
+search_algorithm: smbo
+early_stop: median_stop
+hp_space:
+  model.lr:
+    param_type: quniform
+    range:
+      - 0.001
+      - 0.1
+      - 0.001
+  dataset.train_batch_size:
+    param_type: qloguniform
+    range:
+      - 32
+      - 64
+      - 16

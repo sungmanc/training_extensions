@@ -404,6 +404,21 @@ class HpoManager:
             if target is not None:
                 default_hyper_parameters[key] = target
 
+        for key, val in hpopt_cfg['hp_space'].items():
+            if "batch" in key:
+                if val['range'][1] > train_dataset_size:
+                    val['range'][1] = train_dataset_size
+
+        model_param = (self.environment.
+                       model_template.hyper_parameters.
+                       parameter_overrides["learning_parameters"])
+        default_hyper_parameters = {
+            "learning_parameters.batch_size" :
+                model_param["batch_size"]["default_value"],
+            "learning_parameters.learning_rate" :
+                model_param["learning_rate"]["default_value"]
+        }
+
         hpopt_arguments = dict(
             search_alg="bayes_opt" if self.algo == "smbo" else self.algo,
             search_space=HpoManager.generate_hpo_search_space(hpopt_cfg["hp_space"]),
@@ -456,6 +471,7 @@ class HpoManager:
                     )
 
         HpoManager.remove_empty_keys(hpopt_arguments)
+
         self.hpo = hpopt.create(**hpopt_arguments)
 
     def check_resumable(self):
@@ -670,6 +686,7 @@ class HpoManager:
     def get_num_full_iterations(environment):
         """Get the number of full iterations for the specified environment"""
         num_full_iterations = 0
+
         task_type = environment.model_template.task_type
         hyperparameters = environment.get_hyper_parameters()
         if task_type == TaskType.CLASSIFICATION:
@@ -699,8 +716,10 @@ class HpoManager:
         Set given hyper parameter to hyper parameter in environment
         aligning with "ConfigurableParameters".
         """
+        
         for param_key, param_val in hp_config.items():
             param_key = param_key.split(".")
+
             target = origin_hp
             for val in param_key[:-1]:
                 target = getattr(target, val)
@@ -833,6 +852,7 @@ def main():
         with open(sys.argv[1], "rb") as pfile:
             kwargs = HpoUnpickler(pfile).load()
             hp_config = kwargs["hp_config"]
+
             run_hpo_trainer(**kwargs)
     except RuntimeError as err:
         if str(err).startswith("CUDA out of memory"):

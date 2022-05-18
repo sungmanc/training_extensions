@@ -87,7 +87,8 @@ def run_hpo(args, environment, dataset, task_type):
         task_class = get_HPO_train_task(task_class, task_type)
 
         task = task_class(task_environment=environment)
-        task.resume(hpo_weight_path) # prepare finetune stage to resume
+        if not task_type == TaskType.ANOMALY_CLASSIFICATION:
+            task.resume(hpo_weight_path) # prepare finetune stage to resume
 
         if args.load_weights:
             environment.model.configuration.configurable_parameters = hyper_parameters
@@ -164,7 +165,7 @@ def run_hpo_trainer(
         else:
             hyper_parameters.learning_parameters.num_iters = hp_config["iterations"]
     elif task_type == TaskType.ANOMALY_CLASSIFICATION:
-        (hyper_parameters.trainer.max_epochs) = hp_config["iterations"]
+        pass # TODO it should be modifed after epoch is added in template file
 
     # set hyper-parameters and print them
     HpoManager.set_hyperparameter(hyper_parameters, hp_config["params"])
@@ -278,6 +279,10 @@ def get_HPO_train_task(impl_class, task_type):
                 self._config.checkpoint_config["max_keep_ckpts"] = \
                     hp_config["iterations"] + 10
                 self._config.checkpoint_config["interval"] = 1
+            elif self._task_type == TaskType.ANOMALY_CLASSIFICATION:
+                # TODO it should be modifed
+                # if resume is applied to anomaly classification
+                pass
 
             # turn off adpative epoch when asha is used
             if "bracket" in hp_config:
@@ -383,7 +388,7 @@ class HpoManager:
 
         # make batch size range lower than train set size
         if task_type == TaskType.ANOMALY_CLASSIFICATION:
-            batch_size_name = "dataset.batch_size"
+            batch_size_name = "dataset.train_batch_size"
         else:
             batch_size_name = "learning_parameters.batch_size"
         if batch_size_name in hpopt_cfg['hp_space']:
@@ -403,21 +408,6 @@ class HpoManager:
                     break
             if target is not None:
                 default_hyper_parameters[key] = target
-
-        for key, val in hpopt_cfg['hp_space'].items():
-            if "batch" in key:
-                if val['range'][1] > train_dataset_size:
-                    val['range'][1] = train_dataset_size
-
-        model_param = (self.environment.
-                       model_template.hyper_parameters.
-                       parameter_overrides["learning_parameters"])
-        default_hyper_parameters = {
-            "learning_parameters.batch_size" :
-                model_param["batch_size"]["default_value"],
-            "learning_parameters.learning_rate" :
-                model_param["learning_rate"]["default_value"]
-        }
 
         hpopt_arguments = dict(
             search_alg="bayes_opt" if self.algo == "smbo" else self.algo,
@@ -641,6 +631,9 @@ class HpoManager:
                 if "best" in file_name:
                     hpo_weight_path = osp.join(hpo_weight_path, file_name)
                     break
+        elif task_type == TaskType.ANOMALY_CLASSIFICATION:
+            # TODO resume is disabled in anomaly now. If changed, need to modify
+            hpo_weight_path = None
 
         return hyper_parameters, hpo_weight_path
 
@@ -691,10 +684,11 @@ class HpoManager:
         hyperparameters = environment.get_hyper_parameters()
         if task_type == TaskType.CLASSIFICATION:
             num_full_iterations = hyperparameters.learning_parameters.max_num_epochs
-        elif task_type == TaskType.ANOMALY_CLASSIFICATION:
-            num_full_iterations = hyperparameters.trainer.max_epochs
         elif task_type in (TaskType.DETECTION, TaskType.SEGMENTATION):
             num_full_iterations = hyperparameters.learning_parameters.num_iters
+        elif task_type == TaskType.ANOMALY_CLASSIFICATION:
+            # TODO it should be modifed after epoch is added in template file
+            num_full_iterations = 100
 
         return num_full_iterations
 

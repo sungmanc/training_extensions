@@ -166,7 +166,7 @@ class AnomalyInferenceTask(IInferenceTask, IEvaluationTask, IExportTask, IUnload
         logger.info("Inference Configs '%s'", config)
 
         # Callbacks.
-        progress = ProgressCallback(parameters=inference_parameters)
+        progress = ProgressCallback(update_progress_callback=inference_parameters.update_progress)
         inference = AnomalyInferenceCallback(dataset, self.labels, self.task_type)
         normalize = MinMaxNormalizationCallback()
         callbacks = [progress, normalize, inference]

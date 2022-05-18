@@ -18,16 +18,16 @@ import sys
 import time
 from os import path as osp
 from pathlib import Path
-from typing import Optional
 
 import torch
 import yaml
 from ote_sdk.configuration.helper import create
+from ote_sdk.entities.callbacks import HpoCallback, default_progress_callback
 from ote_sdk.entities.model import ModelEntity
 from ote_sdk.entities.model_template import TaskType
 from ote_sdk.entities.subset import Subset
 from ote_sdk.entities.task_environment import TaskEnvironment
-from ote_sdk.entities.train_parameters import TrainParameters, UpdateProgressCallback
+from ote_sdk.entities.train_parameters import TrainParameters
 
 from ote_cli.datasets import get_dataset_class
 from ote_cli.utils.importing import get_impl_class
@@ -192,7 +192,10 @@ def run_hpo_trainer(
 
     # make callback to report score to hpopt every epoch
     train_param = TrainParameters(
-        False, HpoCallback(hp_config, hp_config["metric"], task), None
+        False,
+        default_progress_callback,
+        HpoCallback(hp_config, hp_config["metric"], task),
+        None,
     )
     train_param.train_on_empty_model = None
 
@@ -220,21 +223,6 @@ def exec_hpo_trainer(arg_file_name, alloc_gpus):
         check=False,
     )
     time.sleep(10)
-
-
-class HpoCallback(UpdateProgressCallback):
-    """Callback class to report score to hpopt"""
-
-    def __init__(self, hp_config, metric, hpo_task):
-        super().__init__()
-        self.hp_config = hp_config
-        self.metric = metric
-        self.hpo_task = hpo_task
-
-    def __call__(self, progress: float, score: Optional[float] = None):
-        if score is not None:
-            if hpopt.report(config=self.hp_config, score=score) == hpopt.Status.STOP:
-                self.hpo_task.cancel_training()
 
 
 class HpoManager:

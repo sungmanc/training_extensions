@@ -176,10 +176,12 @@ class AnomalyNNCFTask(AnomalyInferenceTask, IOptimizationTask):
 
         nncf_callback = NNCFCallback(nncf_config=self.optimization_config["nncf_config"])
         callbacks = [
-            ProgressCallback(parameters=optimization_parameters),
             MinMaxNormalizationCallback(),
             nncf_callback,
         ]
+
+        if optimization_parameters:
+            callbacks.append(ProgressCallback(update_progress_callback=optimization_parameters.update_progress))
 
         self.trainer = Trainer(**self.config.trainer, logger=False, callbacks=callbacks)
         self.trainer.fit(model=self.model, datamodule=datamodule)

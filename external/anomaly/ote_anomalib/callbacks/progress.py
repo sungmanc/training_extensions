@@ -16,10 +16,9 @@ Progressbar Callback for OTE task
 # See the License for the specific language governing permissions
 # and limitations under the License.
 
-from typing import Optional, Union
+from typing import Optional
 
-from ote_sdk.entities.inference_parameters import InferenceParameters
-from ote_sdk.entities.train_parameters import TrainParameters, default_progress_callback
+from ote_sdk.entities.callbacks import UpdateProgressCallback, default_progress_callback
 from pytorch_lightning.callbacks.progress import ProgressBar
 
 
@@ -28,14 +27,14 @@ class ProgressCallback(ProgressBar):
     Modifies progress callback to show completion of the entire training step
     """
 
-    def __init__(self, parameters: Optional[Union[TrainParameters, InferenceParameters]] = None) -> None:
+    def __init__(self, update_progress_callback: Optional[UpdateProgressCallback] = None) -> None:
         super().__init__()
         self.current_epoch: int = 0
         self.max_epochs: int = 0
         self._progress: float = 0
 
-        if parameters is not None:
-            self.update_progress_callback = parameters.update_progress
+        if update_progress_callback is not None:
+            self.update_progress_callback = update_progress_callback
         else:
             self.update_progress_callback = default_progress_callback
 

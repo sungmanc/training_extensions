@@ -19,7 +19,7 @@ import time
 from os import path as osp
 from pathlib import Path
 from typing import Optional
-from math import ceil
+from math import ceil, floor
 from inspect import isclass
 from enum import Enum
 import pprint
@@ -37,6 +37,8 @@ from ote_sdk.entities.train_parameters import TrainParameters, UpdateProgressCal
 from ote_cli.datasets import get_dataset_class
 from ote_cli.utils.importing import get_impl_class
 from ote_cli.utils.io import generate_label_schema, save_model_data, read_model
+
+from detection_tasks.apis.detection.config_utils import prepare_for_training
 
 try:
     import hpopt
@@ -120,6 +122,7 @@ def run_hpo_trainer(
     model_template,
     dataset_paths,
     task_type,
+    adaptive_times=None,
 ):
     """Run each training of each trial with given hyper parameters"""
     if dataset_paths is None:
@@ -208,7 +211,7 @@ def run_hpo_trainer(
     task_class = get_impl_class(train_env.model_template.entrypoints.base)
     hpo_impl_class = get_HPO_train_task(task_class, task_type)
     task = hpo_impl_class(task_environment=train_env)
-    task.prepare_hpo(hp_config)
+    task.prepare_hpo(hp_config, adaptive_times)
 
     dataset = HpoDataset(dataset, hp_config)
 
@@ -268,7 +271,7 @@ def get_HPO_train_task(impl_class, task_type):
                 if disable_adapt:
                     self._config.data.train.adaptive_repeat = False
 
-        def prepare_hpo(self, hp_config):
+        def prepare_hpo(self, hp_config, adaptive_times=None):
             if self._task_type == TaskType.CLASSIFICATION:
                 self._scratch_space = osp.join(
                     osp.dirname(hp_config["file_path"]),
@@ -285,12 +288,26 @@ def get_HPO_train_task(impl_class, task_type):
                     hp_config["iterations"] + 10
                 self._config.checkpoint_config["interval"] = 1
 
-            # turn off adpative epoch when asha is used
-            if "bracket" in hp_config:
-                if self._task_type == TaskType.DETECTION:
-                    self._config.data.train.adaptive_repeat_times = False
-                elif self._task_type == TaskType.SEGMENTATION:
-                    self._config.data.train.adaptive_repeat = False
+                if adaptive_times is not None:
+                    self._apply_adaptive_dataset(adaptive_times)
+
+        def get_prepaired_train_config(
+            self,
+            train_dataset,
+            val_dataset
+        ):
+            if self._task_type == TaskType.DETECTION:
+                train_config = prepare_for_training(
+                    self._config, train_dataset, val_dataset, None, None)
+
+            return train_config
+
+        def _apply_adaptive_dataset(self, adaptive_times):
+            if self._task_type == TaskType.DETECTION:
+                self._config.data.train.times = adaptive_times
+                self._config.data.train.adaptive_repeat_times = False
+            elif self._task_type == TaskType.SEGMENTATION:
+                raise NotImplementedError
 
     return HpoTrainTask
 
@@ -351,10 +368,13 @@ class HpoManager:
         self.work_dir = hpo_save_path
         self.deleted_hp = {}
         self.pretty_print = pprint.PrettyPrinter(indent=4)
+        self.adaptive_times = None
+        task_type = self.environment.model_template.task_type
 
         if environment.model is None:
             impl_class = get_impl_class(environment.model_template.entrypoints.base)
-            task = impl_class(task_environment=environment)
+            hpo_impl_class = get_HPO_train_task(impl_class, task_type)
+            task = hpo_impl_class(task_environment=environment)
             model = ModelEntity(
                 dataset,
                 environment.get_model_configuration(),
@@ -385,8 +405,10 @@ class HpoManager:
 
         self.num_gpus_per_trial = 1
 
-        train_dataset_size = len(dataset.get_subset(Subset.TRAINING))
-        val_dataset_size = len(dataset.get_subset(Subset.VALIDATION))
+        train_dataset = dataset.get_subset(Subset.TRAINING)
+        val_dataset = dataset.get_subset(Subset.VALIDATION)
+        train_dataset_size = len(train_dataset)
+        val_dataset_size = len(val_dataset)
 
         # make batch size range lower than train set size
         batch_size_name="learning_parameters.batch_size"
@@ -416,6 +438,29 @@ class HpoManager:
             if target is not None:
                 default_hyper_parameters[key] = target
 
+        # Apply adpative epoch to HPO
+        max_epoch = HpoManager.get_num_full_iterations(self.environment)
+        if task_type == TaskType.DETECTION:
+            train_config = task.get_prepaired_train_config(
+                train_dataset, val_dataset)
+            data_train  = train_config.data.train
+
+            if (data_train.type == 'RepeatDataset'
+                and getattr(data_train, 'adaptive_repeat_times', False)):
+                self.adaptive_times = data_train.times
+                max_epoch = train_config.runner.max_epochs
+
+            # ######
+            # train_config = prepare_for_training(
+            #     task._config, train_dataset, val_dataset, None, None)
+            # max_epoch = train_config.runner.max_epochs
+            # if "subset_ratio" not in hpopt_cfg and train_dataset_size <= 500:
+            #     hpopt_cfg["subset_ratio"] = 1.0
+            # train_dataset_size *= train_config.data.train.times
+            # ######
+        elif task_type == TaskType.SEGMENTATION:
+            pass
+
         hpopt_arguments = dict(
             search_alg="bayes_opt" if self.algo == "smbo" else self.algo,
             search_space=HpoManager.generate_hpo_search_space(hpopt_cfg["hp_space"]),
@@ -424,7 +469,7 @@ class HpoManager:
             save_path=self.work_dir,
             max_iterations=hpopt_cfg.get("max_iterations"),
             subset_ratio=hpopt_cfg.get("subset_ratio"),
-            num_full_iterations=HpoManager.get_num_full_iterations(self.environment),
+            num_full_iterations=max_epoch,
             full_dataset_size=train_dataset_size,
             expected_time_ratio=expected_time_ratio,
             non_pure_train_ratio=val_dataset_size
@@ -450,7 +495,6 @@ class HpoManager:
             # Prevent each trials from being stopped during warmup stage
             bs = default_hyper_parameters.get(batch_size_name)
             if "min_iterations" not in hpopt_cfg and bs is not None:
-                task_type = self.environment.model_template.task_type
                 if task_type == TaskType.CLASSIFICATION:
                     with open(osp.join(osp.dirname(
                         self.environment.model_template.model_template_path
@@ -463,6 +507,8 @@ class HpoManager:
                             / train_dataset_size
                         )
                 elif task_type in [TaskType.DETECTION, TaskType.SEGMENTATION]:
+                    if self.adaptive_times is not None:
+                        train_dataset_size *= self.adaptive_times
                     hpopt_arguments["min_iterations"] = ceil(
                         env_hp.learning_parameters.learning_rate_warmup_iters
                         / ceil(train_dataset_size / bs)
@@ -582,6 +628,7 @@ class HpoManager:
                     "model_template": self.environment.model_template,
                     "dataset_paths": self.dataset_paths,
                     "task_type": task_type,
+                    "adaptive_times" : self.adaptive_times
                 }
 
                 pickle_path = HpoManager.safe_pickle_dump(

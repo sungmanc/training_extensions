@@ -22,6 +22,7 @@ from typing import Optional
 from math import ceil
 from inspect import isclass
 from enum import Enum
+import pprint
 
 
 import torch
@@ -171,7 +172,7 @@ def run_hpo_trainer(
 
     # set hyper-parameters and print them
     HpoManager.set_hyperparameter(hyper_parameters, hp_config["params"])
-    print(f"hyper parameter of current trial : {hp_config['params']}")
+    print(f"hyper parameter of current #{hp_config['trial_id']} trial : {hp_config['params']}")
 
     dataset_class = get_dataset_class(task_type)
     dataset = dataset_class(
@@ -349,6 +350,7 @@ class HpoManager:
         self.dataset_paths = dataset_paths
         self.work_dir = hpo_save_path
         self.deleted_hp = {}
+        self.pretty_print = pprint.PrettyPrinter(indent=4)
 
         if environment.model is None:
             impl_class = get_impl_class(environment.model_template.entrypoints.base)
@@ -468,6 +470,7 @@ class HpoManager:
 
         HpoManager.remove_empty_keys(hpopt_arguments)
 
+        self.pretty_print.pprint(hpopt_arguments)
         self.hpo = hpopt.create(**hpopt_arguments)
 
     def check_resumable(self):

@@ -124,6 +124,7 @@ class SegmentationTrainingTestParameters(DefaultOTETestCreationParametersInterfa
 
     def default_test_parameters(self) -> Dict[str, Any]:
         DEFAULT_TEST_PARAMETERS = {
+            "num_training_iters": 1,
             "batch_size": 4,
         }
         return deepcopy(DEFAULT_TEST_PARAMETERS)

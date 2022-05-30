@@ -190,7 +190,7 @@ class ClassificationInferenceTask(BaseTask, IInferenceTask, IExportTask, IEvalua
                 continue
             if cfg.type == 'RepeatDataset':
                 cfg = cfg.dataset
-            cfg.type = 'MPAClsDataset'
+            cfg.type = 'MPAMultiLabelClsDataset'
             cfg.domain = domain
             cfg.ote_dataset = None
             cfg.labels = None
@@ -305,7 +305,8 @@ class ClassificationTrainTask(ClassificationInferenceTask):
             :return output List[MetricsGroup]
             """
             output: List[MetricsGroup] = []
-            metric_key = 'val/accuracy_top-1'
+            # metric_key = 'val/accuracy_top-1'
+            metric_key = 'val/mAP'
 
             # Learning curves
             best_acc = -1

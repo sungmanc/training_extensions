@@ -1,16 +1,16 @@
 # Copyright (C) 2022 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-
+import warnings
 import torch
 import numpy as np
 
 from mmcv.utils.registry import build_from_cfg
+from mmcls.core import average_performance, mAP
 from mmcls.datasets.builder import DATASETS, PIPELINES
 from mmcls.datasets.pipelines import Compose
 from mmcls.datasets.base_dataset import BaseDataset
 from mpa.utils.logger import get_logger
-
 logger = get_logger()
 
 
@@ -49,8 +49,7 @@ class MPAClsDataset(BaseDataset):
                 label = None
             else:
                 label = int(dataset_item.get_annotations()[0].get_labels()[0].id_)
-
-            self.gt_labels.append(label)
+                self.gt_labels.append(label)
         self.gt_labels = np.array(self.gt_labels)
 
     def __getitem__(self, index):
@@ -63,7 +62,7 @@ class MPAClsDataset(BaseDataset):
         results['index'] = index
         results['dataset_item'] = dataset_item
         results['height'], results['width'], _ = dataset_item.numpy.shape
-        results['gt_label'] = None if self.gt_labels[index] is None else torch.tensor(self.gt_labels[index])
+        results['gt_label'] = None if len(self.gt_labels) == 0 else torch.tensor(self.gt_labels[index])
         results = self.pipeline(results)
 
         return results
@@ -133,3 +132,76 @@ class MPAClsDataset(BaseDataset):
             cls_acc = np.sum(cls_pred) / len(cls_pred)
             accracies.append(cls_acc)
         return accracies
+
+@DATASETS.register_module()
+class MPAMultiLabelClsDataset(MPAClsDataset):
+    
+    def load_annotations(self):
+        for dataset_item in self.ote_dataset:
+            if dataset_item.get_annotations() == []:
+                label = None
+            else:
+                label = int(dataset_item.get_annotations()[0].get_labels()[0].id_)
+                onehot_label = np.zeros(len(self.CLASSES))
+                onehot_label[label] = 1
+                self.gt_labels.append(onehot_label)
+        self.gt_labels = np.array(self.gt_labels)
+
+    def evaluate(self,
+                 results,
+                 metric='mAP',
+                 metric_options=None,
+                 logger=None,
+                 **deprecated_kwargs):
+        """Evaluate the dataset.
+
+        Args:
+            results (list): Testing results of the dataset.
+            metric (str | list[str]): Metrics to be evaluated.
+                Default value is 'mAP'. Options are 'mAP', 'CP', 'CR', 'CF1',
+                'OP', 'OR' and 'OF1'.
+            metric_options (dict, optional): Options for calculating metrics.
+                Allowed keys are 'k' and 'thr'. Defaults to None
+            logger (logging.Logger | str, optional): Logger used for printing
+                related information during evaluation. Defaults to None.
+            deprecated_kwargs (dict): Used for containing deprecated arguments.
+
+        Returns:
+            dict: evaluation results
+        """
+        if metric_options is None:
+            metric_options = {'thr': 0.5}
+
+        if deprecated_kwargs != {}:
+            warnings.warn('Option arguments for metrics has been changed to '
+                          '`metric_options`.')
+            metric_options = {**deprecated_kwargs}
+
+        if isinstance(metric, str):
+            metrics = [metric]
+        else:
+            metrics = metric
+        allowed_metrics = ['mAP', 'CP', 'CR', 'CF1', 'OP', 'OR', 'OF1']
+        eval_results = {}
+        results = np.vstack(results)
+        gt_labels = self.get_gt_labels()
+        num_imgs = len(results)
+        assert len(gt_labels) == num_imgs, 'dataset testing results should '\
+            'be of the same length as gt_labels.'
+
+        invalid_metrics = set(metrics) - set(allowed_metrics)
+        if len(invalid_metrics) != 0:
+            raise ValueError(f'metric {invalid_metrics} is not supported.')
+
+        if 'mAP' in metrics:
+            mAP_value = mAP(results, gt_labels)
+            eval_results['mAP'] = mAP_value
+        if len(set(metrics) - {'mAP'}) != 0:
+            performance_keys = ['CP', 'CR', 'CF1', 'OP', 'OR', 'OF1']
+            performance_values = average_performance(results, gt_labels,
+                                                     **metric_options)
+            for k, v in zip(performance_keys, performance_values):
+                if k in metrics:
+                    eval_results[k] = v
+
+        return eval_results

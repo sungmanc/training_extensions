@@ -22,7 +22,6 @@ import os.path as osp
 from ote_sdk.configuration.helper import create
 from ote_sdk.entities.inference_parameters import InferenceParameters
 from ote_sdk.entities.model import ModelEntity
-from ote_sdk.entities.model_template import TaskType
 from ote_sdk.entities.resultset import ResultSetEntity
 from ote_sdk.entities.subset import Subset
 from ote_sdk.entities.task_environment import TaskEnvironment
@@ -164,6 +163,7 @@ def main():
         )
 
     if args.enable_hpo:
+        print("[DEBUG-HPO] enabled hpo")
         task = run_hpo(args, environment, dataset, template.task_type)
     else:
         task = task_class(task_environment=environment)

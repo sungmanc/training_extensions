@@ -36,6 +36,10 @@ from ote_sdk.serialization.label_mapper import label_schema_to_bytes
 from ote_sdk.usecases.tasks.interfaces.export_interface import ExportType
 from ote_sdk.usecases.tasks.interfaces.optimization_interface import IOptimizationTask
 from ote_sdk.usecases.tasks.interfaces.optimization_interface import OptimizationType
+from ote_sdk.utils.argument_checks import (
+    DatasetParamTypeCheck,
+    check_input_parameters_type,
+)
 
 from mmdet.apis import train_detector
 from mmdet.apis.fake_input import get_fake_input
@@ -59,6 +63,7 @@ logger = get_root_logger()
 
 class OTEDetectionNNCFTask(OTEDetectionInferenceTask, IOptimizationTask):
 
+    @check_input_parameters_type()
     def __init__(self, task_environment: TaskEnvironment):
         """"
         Task for compressing object detection models using NNCF.
@@ -76,17 +81,17 @@ class OTEDetectionNNCFTask(OTEDetectionInferenceTask, IOptimizationTask):
         if quantization and pruning:
             self._nncf_preset = "nncf_quantization_pruning"
             self._optimization_methods = [OptimizationMethod.QUANTIZATION, OptimizationMethod.FILTER_PRUNING]
-            self._nncf_precision = [ModelPrecision.INT8]
+            self._precision = [ModelPrecision.INT8]
             return
         if quantization and not pruning:
             self._nncf_preset = "nncf_quantization"
             self._optimization_methods = [OptimizationMethod.QUANTIZATION]
-            self._nncf_precision = [ModelPrecision.INT8]
+            self._precision = [ModelPrecision.INT8]
             return
         if not quantization and pruning:
             self._nncf_preset = "nncf_pruning"
             self._optimization_methods = [OptimizationMethod.FILTER_PRUNING]
-            self._nncf_precision = [ModelPrecision.FP32]
+            self._precision = self._precision_from_config
             return
         raise RuntimeError('Not selected optimization algorithm')
 
@@ -177,12 +182,13 @@ class OTEDetectionNNCFTask(OTEDetectionInferenceTask, IOptimizationTask):
             get_fake_input_func=get_fake_input,
             is_accuracy_aware=is_acc_aware_training_set)
 
+    @check_input_parameters_type({"dataset": DatasetParamTypeCheck})
     def optimize(
         self,
         optimization_type: OptimizationType,
         dataset: DatasetEntity,
         output_model: ModelEntity,
-        optimization_parameters: Optional[OptimizationParameters],
+        optimization_parameters: Optional[OptimizationParameters] = None,
     ):
         if optimization_type is not OptimizationType.NNCF:
             raise RuntimeError("NNCF is the only supported optimization")
@@ -243,10 +249,11 @@ class OTEDetectionNNCFTask(OTEDetectionInferenceTask, IOptimizationTask):
         output_model.model_format = ModelFormat.BASE_FRAMEWORK
         output_model.optimization_type = self._optimization_type
         output_model.optimization_methods = self._optimization_methods
-        output_model.precision = self._nncf_precision
+        output_model.precision = self._precision
 
         self._is_training = False
 
+    @check_input_parameters_type()
     def export(self, export_type: ExportType, output_model: ModelEntity):
         if self._compression_ctrl is None:
             super().export(export_type, output_model)
@@ -256,6 +263,7 @@ class OTEDetectionNNCFTask(OTEDetectionInferenceTask, IOptimizationTask):
             super().export(export_type, output_model)
             self._model.enable_dynamic_graph_building()
 
+    @check_input_parameters_type()
     def save_model(self, output_model: ModelEntity):
         buffer = io.BytesIO()
         hyperparams = self._task_environment.get_hyper_parameters(OTEDetectionConfig)

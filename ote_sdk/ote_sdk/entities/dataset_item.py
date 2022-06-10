@@ -110,17 +110,24 @@ class DatasetItemEntity(metaclass=abc.ABCMeta):
                     break
         self.__roi = roi
 
-        self.__metadata: List[MetadataItemEntity] = []
+        self.__metadata: Sequence[MetadataItemEntity] = []
         if metadata is not None:
-            self.__metadata = list(metadata)
+            self.__metadata = metadata
 
         self.__ignored_labels: Set[LabelEntity] = (
             set() if ignored_labels is None else set(ignored_labels)
         )
 
-    @property
-    def metadata(self) -> Sequence[MetadataItemEntity]:
-        """Provides access to metadata."""
+    def set_metadata(self, metadata: Sequence[MetadataItemEntity]):
+        """
+        Sets the metadata
+        """
+        self.__metadata = metadata
+
+    def get_metadata(self) -> Sequence[MetadataItemEntity]:
+        """
+        Returns the metadata
+        """
         return self.__metadata
 
     @property
@@ -401,7 +408,7 @@ class DatasetItemEntity(metaclass=abc.ABCMeta):
 
         roi_annotation = None
         for annotation in self.annotation_scene.annotations:
-            if annotation == self.roi:
+            if annotation.shape == self.roi.shape:
                 roi_annotation = annotation
                 break
 
@@ -486,6 +493,6 @@ class DatasetItemEntity(metaclass=abc.ABCMeta):
         """
         return [
             meta
-            for meta in self.metadata
+            for meta in self.get_metadata()
             if meta.data.name == name and meta.model == model
         ]

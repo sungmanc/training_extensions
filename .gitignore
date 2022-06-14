@@ -33,4 +33,5 @@ dmypy.json
 .python-version
 
 cur_task_venv/
+output*
 *.sh

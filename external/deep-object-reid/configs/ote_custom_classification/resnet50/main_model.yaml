@@ -17,6 +17,7 @@ model:
   pretrained: False
   load_weights: 'https://download.pytorch.org/models/resnet50-19c8e357.pth'
   save_all_chkpts: False
+  frozen_stages: 4
 
 custom_datasets:
   roots: ['data/CIFAR100/train', 'data/CIFAR100/val']

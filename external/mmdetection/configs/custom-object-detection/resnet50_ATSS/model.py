@@ -86,7 +86,7 @@ runner = dict(type='EpochRunnerWithCancel', max_epochs=300)
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = 'output'
-load_from = '/home/sungmanc/scripts/pretrained_weights/atss_r50_fpn_1x/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
+load_from = '/local/sungmanc/scripts/pretrained_weights/atss_r50_fpn_1x_coco_20200209-985f7bd0.pth'
 resume_from = None
 workflow = [('train', 1)]
 custom_hooks = [

@@ -1,5 +1,9 @@
 # Description.
+<<<<<<< HEAD
 model_template_id: Custom_Object_Detection_Gen3_ATSS_ResNet-50
+=======
+model_template_id: Custom_Object_Detection_Gen3_ATSS_ResNet50
+>>>>>>> 0edd12c7d1d9443d62132099df76ec324530e2f8
 name: ATSS
 task_type: DETECTION
 task_family: VISION

@@ -35,3 +35,4 @@ dmypy.json
 cur_task_venv/
 output*
 *.sh
+*.csv

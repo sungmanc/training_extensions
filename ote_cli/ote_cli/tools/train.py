@@ -44,7 +44,7 @@ from ote_cli.utils.parser import (
     add_hyper_parameters_sub_parser,
     gen_params_dict_from_args,
 )
-
+import time
 
 def parse_args():
     """
@@ -163,15 +163,20 @@ def main():
         )
 
     if args.enable_hpo:
+        start_time = time.time()
         task = run_hpo(args, environment, dataset, template.task_type)
+        hpo_elapsed_time = time.time() - start_time
     else:
         task = task_class(task_environment=environment)
 
     output_model = ModelEntity(dataset, environment.get_model_configuration())
 
+    start_time = time.time()
     task.train(dataset, output_model, train_parameters=TrainParameters())
-
+    train_elapsed_time = time.time() - start_time
+    
     save_model_data(output_model, args.save_model_to)
+    
 
     validation_dataset = dataset.get_subset(Subset.VALIDATION)
     predicted_validation_dataset = task.infer(
@@ -187,7 +192,14 @@ def main():
     task.evaluate(resultset)
     assert resultset.performance is not None
     print(resultset.performance)
-
+    
+    with open(osp.join(args.save_model_to, 'performance_result.txt'), 'w') as f:
+        if args.enable_hpo:
+            f.write('hpo elapsed time: {}\n'.format(hpo_elapsed_time))
+        f.write('train elapsed time: {}\n'.format(train_elapsed_time))
+        f.write('result: {}'.format(resultset.performance.score.value))
+        
+    f.close()
 
 if __name__ == "__main__":
     main()

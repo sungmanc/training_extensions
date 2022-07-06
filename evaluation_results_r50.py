@@ -21,7 +21,7 @@ hyper_parameters = create(hyper_parameters)
 
 Dataset = get_dataset_class(model_template.task_type)
 
-save_file_path = 'results_up-A_multiscale_head_48ep_hpo_lineareval.csv'
+save_file_path = 'results_up-A_multiscale_head_48ep_no_hpo_finetune.csv'
 
 def infer(name: str, i: int):
     dataset = Dataset(
@@ -40,7 +40,7 @@ def infer(name: str, i: int):
         model_template=model_template)
 
     environment.model = read_model(
-        environment.get_model_configuration(), "./outputs/det-up-A_multiscale_head_48ep/hpo/ote_{}_16_{}_lineareval/results/weights.pth".format(name, i), None
+        environment.get_model_configuration(), "./outputs/det-up-A_multiscale_head_48ep/no_hpo/ote_{}_16_{}_finetune/results/weights.pth".format(name, i), None
     )
     task = Task(task_environment=environment)
 

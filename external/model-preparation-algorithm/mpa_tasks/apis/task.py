@@ -283,6 +283,7 @@ class BaseTask:
         def __reduce__(self):
             return (self.__class__, (id(self.task_instance),))
 
-    def set_override_configurations(self, config):
-        logger.info(f"set override config to: {config}")
-        self.override_configs = config
+    def update_override_configurations(self, config):
+        logger.info(f"update override config with: {config}")
+        config = ConfigDict(**config)
+        self.override_configs.update(config)

@@ -28,7 +28,6 @@ from typing import Optional
 
 import torch
 import yaml
-from mmcv.utils import ConfigDict  # pylint: disable=import-error
 from ote_sdk.configuration.helper import create
 from ote_sdk.entities.model import ModelEntity
 from ote_sdk.entities.model_template import TaskType
@@ -38,7 +37,7 @@ from ote_sdk.entities.train_parameters import TrainParameters, UpdateProgressCal
 
 from ote_cli.datasets import get_dataset_class
 from ote_cli.utils.importing import get_impl_class
-from ote_cli.utils.io import generate_label_schema
+from ote_cli.utils.io import generate_label_schema, read_model, save_model_data
 
 try:
     import hpopt
@@ -67,6 +66,15 @@ def _check_hpo_enabled_task(task_type: TaskType):
         TaskType.ANOMALY_DETECTION,
         TaskType.ANOMALY_SEGMENTATION,
     ]
+
+
+def _is_mpa_framework_task(task_type: TaskType):
+    """Check whether mpa framework task"""
+    return (
+        _is_cls_framework_task(task_type)
+        or _is_det_framework_task(task_type)
+        or _is_seg_framework_task(task_type)
+    )
 
 
 def _is_cls_framework_task(task_type: TaskType):
@@ -279,9 +287,7 @@ def run_hpo_trainer(
     )
 
     # make callback to report score to hpopt every epoch
-    train_param = TrainParameters(
-        False, HpoCallback(hp_config, hp_config["metric"], task), None
-    )
+    train_param = TrainParameters(False, HpoCallback(hp_config, hp_config["metric"], task))
 
     task.train(dataset=dataset, output_model=output_model, train_parameters=train_param)
 
@@ -338,6 +344,7 @@ def get_train_wrapper_task(impl_class, task_type):
             super().__init__(task_environment)
             self._task_type = task_type
 
+        # TODO: need to check things below whether works on MPA tasks
         def set_resume_path_to_config(self, resume_path):
             """set path for the resume to the config of the each task framework"""
             if _is_cls_framework_task(self._task_type):
@@ -350,34 +357,26 @@ def get_train_wrapper_task(impl_class, task_type):
 
         def prepare_hpo(self, hp_config):
             """update config of the each task framework for the HPO"""
-            if (
-                _is_cls_framework_task(self._task_type)
-                or _is_det_framework_task(self._task_type)
-                or _is_seg_framework_task(self._task_type)
-            ):
+            if _is_mpa_framework_task(self._task_type):
                 cfg = dict(
                     checkpoint_config=dict(
                         max_keep_ckpts=(hp_config["iterations"] + 10), interval=1
                     )
                 )
-                self.set_override_configurations(cfg)
+                self.update_override_configurations(cfg)
                 self._output_path = _get_hpo_trial_workdir(  # pylint: disable=attribute-defined-outside-init
                     hp_config
                 )
 
         def prepare_saving_initial_weight(self, save_path):
             """add a hook which saves initial model weight before training"""
-            if (
-                _is_cls_framework_task(task_type)
-                or _is_det_framework_task(task_type)
-                or _is_seg_framework_task(task_type)
-            ):
+            if _is_mpa_framework_task(task_type):
                 cfg = {
                     "custom_hooks": [
-                        ConfigDict(type="SaveInitialWeightHook", save_path=save_path)
+                        dict(type="SaveInitialWeightHook", save_path=save_path)
                     ]
                 }
-                self.set_override_configurations(cfg)
+                self.update_override_configurations(cfg)
             else:
                 raise RuntimeError(
                     "If task is not classification, detection or segmentation,"
@@ -434,11 +433,7 @@ def _load_hpopt_config(file_path):
 def _get_best_model_weight_path(hpo_dir: str, trial_num: str, task_type: TaskType):
     """Return best model weight from HPO trial directory"""
     best_weight_path = None
-    if (
-        _is_cls_framework_task(task_type)
-        or _is_det_framework_task(task_type)
-        or _is_seg_framework_task(task_type)
-    ):
+    if _is_mpa_framework_task(task_type):
         best_arr = Path(osp.join(hpo_dir, str(trial_num))).glob("**/best*.pth")
         for best_name_file in best_arr:
             if not osp.islink(best_name_file):
@@ -538,11 +533,7 @@ class HpoManager:
 
         # make batch size range lower than train set size
         env_hp = self.environment.get_hyper_parameters()
-        if (
-            _is_cls_framework_task(task_type)
-            or _is_det_framework_task(task_type)
-            or _is_seg_framework_task(task_type)
-        ):
+        if _is_mpa_framework_task(task_type):
             batch_size_name = "learning_parameters.batch_size"
         elif _is_anomaly_framework_task(task_type):
             batch_size_name = "learning_parameters.train_batch_size"
@@ -607,11 +598,7 @@ class HpoManager:
             # Prevent each trials from being stopped during warmup stage
             batch_size = default_hyper_parameters.get(batch_size_name)
             if "min_iterations" not in hpopt_cfg and batch_size is not None:
-                if (
-                    _is_cls_framework_task(task_type)
-                    or _is_det_framework_task(task_type)
-                    or _is_seg_framework_task(task_type)
-                ):
+                if _is_mpa_framework_task(task_type):
                     hpopt_arguments["min_iterations"] = ceil(
                         env_hp.learning_parameters.learning_rate_warmup_iters
                         / ceil(train_dataset_size / batch_size)
@@ -817,11 +804,7 @@ class HpoManager:
 
         task_type = environment.model_template.task_type
         params = environment.get_hyper_parameters()
-        if (
-            _is_cls_framework_task(task_type)
-            or _is_det_framework_task(task_type)
-            or _is_seg_framework_task(task_type)
-        ):
+        if _is_mpa_framework_task(task_type):
             learning_parameters = params.learning_parameters
             num_full_iterations = learning_parameters.num_iters
         elif _is_anomaly_framework_task(task_type):

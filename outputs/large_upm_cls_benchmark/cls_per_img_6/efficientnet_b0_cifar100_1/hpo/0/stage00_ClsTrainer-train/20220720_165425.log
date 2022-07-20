@@ -1,0 +1,117 @@
+2022-07-20 16:54:25,861 | INFO : configured logger at /home/sungmanc/scripts/ote/training_extensions/outputs/large_upm_cls_benchmark/cls_per_img_6/efficientnet_b0_cifar100_1/hpo/0/stage00_ClsTrainer-train with named 20220720_165425.log
+2022-07-20 16:54:25,861 | INFO : configure: training=True
+2022-07-20 16:54:25,862 | INFO : configure_data()
+2022-07-20 16:54:26,593 | INFO : Environment info:
+------------------------------------------------------------
+sys.platform: linux
+Python: 3.8.10 (default, Jun 22 2022, 20:18:18) [GCC 9.4.0]
+CUDA available: True
+GPU 0: NVIDIA GeForce RTX 3090
+CUDA_HOME: /usr/local/cuda
+NVCC: Build cuda_11.1.TC455_06.29069683_0
+GCC: gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0
+PyTorch: 1.8.2+cu111
+PyTorch compiling details: PyTorch built with:
+  - GCC 7.3
+  - C++ Version: 201402
+  - Intel(R) Math Kernel Library Version 2020.0.0 Product Build 20191122 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v1.7.0 (Git Hash 7aed236906b1f7a05c0917e5257a1af05e9ff683)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.1
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86
+  - CuDNN 8.0.5
+  - Magma 2.5.2
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.1, CUDNN_VERSION=8.0.5, CXX_COMPILER=/opt/rh/devtoolset-7/root/usr/bin/c++, CXX_FLAGS= -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -fopenmp -DNDEBUG -DUSE_KINETO -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.8.2, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, 
+
+TorchVision: 0.9.2+cu111
+OpenCV: 4.5.5
+MMCV: 1.3.14
+MMCV Compiler: GCC 9.4
+MMCV CUDA Compiler: 11.1
+MMClassification: 0.9.0+0f19189
+------------------------------------------------------------
+
+2022-07-20 16:54:26,613 | INFO : called train_worker() gpu=None, distributed=False, validate=True
+2022-07-20 16:54:26,864 | INFO : init weight - https://github.com/osmr/imgclsmob/releases/download/v0.0.364/efficientnet_b0-0752-0e386130.pth.zip
+2022-07-20 16:54:29,406 | INFO : Task Adaptation: [] => ['apple', 'aquarium_fish', 'bowl', 'boy', 'bridge', 'bus', 'butterfly', 'camel', 'can', 'castle', 'caterpillar', 'cattle', 'baby', 'chair', 'chimpanzee', 'clock', 'cloud', 'cockroach', 'couch', 'crab', 'crocodile', 'cup', 'dinosaur', 'bear', 'dolphin', 'elephant', 'flatfish', 'forest', 'fox', 'girl', 'hamster', 'house', 'kangaroo', 'keyboard', 'beaver', 'lamp', 'lawn_mower', 'leopard', 'lion', 'lizard', 'lobster', 'man', 'maple_tree', 'motorcycle', 'mountain', 'bed', 'mouse', 'mushroom', 'oak_tree', 'orange', 'orchid', 'otter', 'palm_tree', 'pear', 'pickup_truck', 'pine_tree', 'bee', 'plain', 'plate', 'poppy', 'porcupine', 'possum', 'rabbit', 'raccoon', 'ray', 'road', 'rocket', 'beetle', 'rose', 'sea', 'seal', 'shark', 'shrew', 'skunk', 'skyscraper', 'snail', 'snake', 'spider', 'bicycle', 'squirrel', 'streetcar', 'sunflower', 'sweet_pepper', 'table', 'tank', 'telephone', 'television', 'tiger', 'tractor', 'bottle', 'train', 'trout', 'tulip', 'turtle', 'wardrobe', 'whale', 'willow_tree', 'wolf', 'woman', 'worm']
+2022-07-20 16:54:29,406 | INFO : - Efficient Mode: True
+2022-07-20 16:54:29,585 | INFO : Start running, host: sungmanc@workstation06, work_dir: /home/sungmanc/scripts/ote/training_extensions/outputs/large_upm_cls_benchmark/cls_per_img_6/efficientnet_b0_cifar100_1/hpo/0/stage00_ClsTrainer-train
+2022-07-20 16:54:29,585 | INFO : Hooks will be executed in the following order:
+before_run:
+(VERY_HIGH   ) CosineAnnealingLrUpdaterHook       
+(NORMAL      ) SaveInitialWeightHook              
+(NORMAL      ) CancelInterfaceHook                
+(NORMAL      ) LoggerReplaceHook                  
+(71          ) OTEProgressHook                    
+(VERY_LOW    ) TextLoggerHook                     
+(VERY_LOW    ) TensorboardLoggerHook              
+(VERY_LOW    ) OTELoggerHook                      
+ -------------------- 
+before_train_epoch:
+(VERY_HIGH   ) CosineAnnealingLrUpdaterHook       
+(NORMAL      ) TaskAdaptHook                      
+(LOW         ) IterTimerHook                      
+(71          ) OTEProgressHook                    
+(VERY_LOW    ) TextLoggerHook                     
+(VERY_LOW    ) TensorboardLoggerHook              
+(VERY_LOW    ) OTELoggerHook                      
+ -------------------- 
+before_train_iter:
+(VERY_HIGH   ) CosineAnnealingLrUpdaterHook       
+(LOW         ) IterTimerHook                      
+(71          ) OTEProgressHook                    
+ -------------------- 
+after_train_iter:
+(HIGHEST     ) CustomEvalHook                     
+(ABOVE_NORMAL) SAMOptimizerHook                   
+(NORMAL      ) CheckpointHookWithValResults       
+(LOW         ) IterTimerHook                      
+(71          ) OTEProgressHook                    
+(VERY_LOW    ) TextLoggerHook                     
+(VERY_LOW    ) TensorboardLoggerHook              
+(VERY_LOW    ) OTELoggerHook                      
+ -------------------- 
+after_train_epoch:
+(HIGHEST     ) CustomEvalHook                     
+(NORMAL      ) CheckpointHookWithValResults       
+(71          ) OTEProgressHook                    
+(VERY_LOW    ) TextLoggerHook                     
+(VERY_LOW    ) TensorboardLoggerHook              
+(VERY_LOW    ) OTELoggerHook                      
+ -------------------- 
+before_val_epoch:
+(NORMAL      ) TaskAdaptHook                      
+(LOW         ) IterTimerHook                      
+(71          ) OTEProgressHook                    
+(VERY_LOW    ) TextLoggerHook                     
+(VERY_LOW    ) TensorboardLoggerHook              
+(VERY_LOW    ) OTELoggerHook                      
+ -------------------- 
+before_val_iter:
+(LOW         ) IterTimerHook                      
+(71          ) OTEProgressHook                    
+ -------------------- 
+after_val_iter:
+(LOW         ) IterTimerHook                      
+(71          ) OTEProgressHook                    
+ -------------------- 
+after_val_epoch:
+(71          ) OTEProgressHook                    
+(VERY_LOW    ) TextLoggerHook                     
+(VERY_LOW    ) TensorboardLoggerHook              
+(VERY_LOW    ) OTELoggerHook                      
+ -------------------- 
+after_run:
+(71          ) OTEProgressHook                    
+(VERY_LOW    ) TensorboardLoggerHook              
+ -------------------- 
+2022-07-20 16:54:29,586 | INFO : workflow: [('train', 1)], max: 20 epochs
+2022-07-20 16:54:29,586 | INFO : Saving weight before training
+2022-07-20 16:54:29,610 | INFO : cancel hook is initialized
+2022-07-20 16:54:29,610 | INFO : logger in the runner is replaced to the MPA logger
+2022-07-20 16:54:32,791 | INFO : Epoch [1][16/16]	lr: 7.000e-03, eta: 0:06:17, time: 0.199, data_time: 0.040, memory: 3571, current_iters: 15, loss: 4.6203, top-1: 1.6000, top-5: 7.2000, sharpness: 0.2929, max_loss: 4.9145
+2022-07-20 16:54:40,642 | INFO : Saving checkpoint at 1 epochs
+2022-07-20 16:54:40,692 | INFO : logged score for metric accuracy_top-1 = 6.53
+2022-07-20 16:54:40,692 | INFO : score = 0.0653 at epoch 0 / 16

@@ -191,6 +191,11 @@ def main():
     assert resultset.performance is not None
     print(resultset.performance)
 
+    with open(osp.join(args.save_model_to, 'performance_result.txt'), 'w') as f:
+        f.write('result: {}'.format(resultset.performance.score.value))
+        
+    f.close()
+
 
 if __name__ == "__main__":
     main()

@@ -10,7 +10,7 @@ do
     --val-ann-files=/home/sungmanc/datasets/${data}/test \
     --val-data-roots=/home/sungmanc/datasets/${data}/test \
     --load-weights=/home/sungmanc/scripts/pretrained_weights/unicl_swin_tiny_in21k_yfcc14m.pth \
-    --save-model-to=./outputs/large_upm_cls_benchmark/few_shot_finetune_hpo/cls_per_img_6/unicl_swin_tiny_in21k_yfcc14m_lr${lr}_${data}_${trial}/results \
+    --save-model-to=./outputs/large_upm_cls_benchmark/few_shot_finetune_hpo/cls_per_img_6/unicl_swin_tiny_in21k_yfcc14m_${data}_${trial}/results \
     --enable-hpo
 done
 
@@ -24,7 +24,7 @@ do
     --val-ann-files=/home/sungmanc/datasets/${data}/test \
     --val-data-roots=/home/sungmanc/datasets/${data}/test \
     --load-weights=/home/sungmanc/scripts/pretrained_weights/unicl_swin_tiny_in21k_yfcc14m.pth \
-    --save-model-to=./outputs/large_upm_cls_benchmark/few_shot_finetune_hpo/cls_per_img_6/unicl_swin_tiny_in21k_yfcc14m_lr${lr}_${data}_${trial}/results \
+    --save-model-to=./outputs/large_upm_cls_benchmark/few_shot_finetune_hpo/cls_per_img_6/unicl_swin_tiny_in21k_yfcc14m_${data}_${trial}/results \
     --enable-hpo
 done
 
@@ -38,7 +38,7 @@ do
     --val-ann-files=/home/sungmanc/datasets/${data}/test \
     --val-data-roots=/home/sungmanc/datasets/${data}/test \
     --load-weights=/home/sungmanc/scripts/pretrained_weights/unicl_swin_tiny_in21k_yfcc14m.pth \
-    --save-model-to=./outputs/large_upm_cls_benchmark/few_shot_finetune_hpo/cls_per_img_6/unicl_swin_tiny_in21k_yfcc14m_lr${lr}_${data}_${trial}/results \
+    --save-model-to=./outputs/large_upm_cls_benchmark/few_shot_finetune_hpo/cls_per_img_6/unicl_swin_tiny_in21k_yfcc14m_${data}_${trial}/results \
     --enable-hpo
 done
 
@@ -52,7 +52,7 @@ do
     --val-ann-files=/home/sungmanc/datasets/${data}/test \
     --val-data-roots=/home/sungmanc/datasets/${data}/test \
     --load-weights=/home/sungmanc/scripts/pretrained_weights/unicl_swin_tiny_in21k_yfcc14m.pth \
-    --save-model-to=./outputs/large_upm_cls_benchmark/few_shot_finetune_hpo/cls_per_img_6/unicl_swin_tiny_in21k_yfcc14m_lr${lr}_${data}_${trial}/results \
+    --save-model-to=./outputs/large_upm_cls_benchmark/few_shot_finetune_hpo/cls_per_img_6/unicl_swin_tiny_in21k_yfcc14m_${data}_${trial}/results \
     --enable-hpo
 done
 

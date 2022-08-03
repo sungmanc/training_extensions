@@ -15,7 +15,7 @@ entrypoints:
   base: mpa_tasks.apis.classification.ClassificationTrainTask
   openvino: torchreid_tasks.openvino_task.OpenVINOClassificationTask
   nncf: mpa_tasks.apis.classification.ClassificationNNCFTask
-base_model_path: ../../../../deep-object-reid/configs/ote_custom_classification/efficientnet_b0/template_experimental.yaml
+base_model_path: ./template.yaml
 
 # Capabilities.
 capabilities: []
@@ -31,7 +31,7 @@ hyper_parameters:
       num_workers:
         default_value: 4
       learning_rate:
-        default_value: 5.0
+        default_value: 1.0
         auto_hpo_state: POSSIBLE
       num_iters:
         default_value: 20

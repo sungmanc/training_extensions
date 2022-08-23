@@ -20,7 +20,7 @@ from ote_sdk.entities.datasets import DatasetEntity
 from ote_sdk.entities.model import ModelEntity, ModelPrecision
 from ote_sdk.entities.task_environment import TaskEnvironment
 from ote_sdk.serialization.label_mapper import LabelSchemaMapper
-
+import pathlib
 
 logger = get_logger()
 DEFAULT_META_KEYS = (
@@ -38,7 +38,8 @@ class BaseTask:
         self._model_name = task_environment.model_template.name
         self._task_type = task_environment.model_template.task_type
         self._labels = task_environment.get_labels(include_empty=False)
-        self._output_path = tempfile.mkdtemp(prefix='MPA-task-')
+        self._output_path = os.path.abspath(task_environment.output_path)
+        pathlib.Path(self._output_path).mkdir(parents=True, exist_ok=True)
         logger.info(f'created output path at {self._output_path}')
         self.confidence_threshold = self._get_confidence_threshold(self._hyperparams)
         # Set default model attributes.
@@ -73,6 +74,10 @@ class BaseTask:
 
         # to override configuration at runtime
         self.override_configs = {}
+
+    @property
+    def _precision_from_config(self):
+        return [ModelPrecision.FP16] if self._model_cfg.get('fp16', None) else [ModelPrecision.FP32]
 
     def _run_task(self, stage_module, mode=None, dataset=None, parameters=None, **kwargs):
         self._initialize(dataset)
@@ -156,10 +161,6 @@ class BaseTask:
         recipe_hparams = self._init_recipe_hparam()
         if len(recipe_hparams) > 0:
             self._recipe_cfg.merge_from_dict(recipe_hparams)
-        if "custom_hooks" in self.override_configs:
-            override_custom_hooks = self.override_configs.pop("custom_hooks")
-            for override_custom_hook in override_custom_hooks:
-                update_or_add_custom_hook(self._recipe_cfg, ConfigDict(override_custom_hook))
         if len(self.override_configs) > 0:
             logger.info(f"before override configs merging = {self._recipe_cfg}")
             self._recipe_cfg.merge_from_dict(self.override_configs)
@@ -168,15 +169,15 @@ class BaseTask:
         # prepare model config
         self._model_cfg = self._init_model_cfg()
 
-        # Remove FP16 config if running on CPU device and revert to FP32
+        # Remove FP16 config if running on CPU device and revert to FP32 
         # https://github.com/pytorch/pytorch/issues/23377
         if not torch.cuda.is_available() and 'fp16' in self._model_cfg:
-            logger.info('Revert FP16 to FP32 on CPU device')
+            logger.info(f'Revert FP16 to FP32 on CPU device')
             if isinstance(self._model_cfg, Config):
                 del self._model_cfg._cfg_dict['fp16']
             elif isinstance(self._model_cfg, ConfigDict):
                 del self._model_cfg['fp16']
-        self._precision = [ModelPrecision.FP32]
+        self._precision = self._precision_from_config
 
         # add Cancel tranining hook
         update_or_add_custom_hook(self._recipe_cfg, ConfigDict(
@@ -236,7 +237,7 @@ class BaseTask:
             if model_data.get('anchors'):
                 self._anchors = model_data['anchors']
 
-            return model_data.get('model', model_data.get('state_dict', None))
+            return model_data['model']
         else:
             return None
 

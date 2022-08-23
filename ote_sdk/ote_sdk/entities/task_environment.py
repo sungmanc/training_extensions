@@ -19,7 +19,6 @@ TypeVariable = TypeVar("TypeVariable", bound=ConfigurableParameters)
 class TaskEnvironment:
     """
     Defines the machine learning environment the task runs in.
-
     :param model_template: The model template used for this task
     :param model: Model to use; if not specified, the task must be either weight-less
         or use pre-trained or randomly initialised weights.
@@ -33,12 +32,14 @@ class TaskEnvironment:
         model: Optional[ModelEntity],
         hyper_parameters: ConfigurableParameters,
         label_schema: LabelSchemaEntity,
+        output_path: str
     ):
 
         self.model_template = model_template
         self.model = model
         self.__hyper_parameters = hyper_parameters
         self.label_schema = label_schema
+        self.output_path = output_path
 
     def __repr__(self):
         return (
@@ -59,7 +60,6 @@ class TaskEnvironment:
     def get_labels(self, include_empty: bool = False) -> List[LabelEntity]:
         """
         Return the labels in this task environment (based on the label schema).
-
         :param include_empty: Include the empty label if ``True``
         """
         return self.label_schema.get_labels(include_empty)
@@ -69,15 +69,12 @@ class TaskEnvironment:
     ) -> TypeVariable:
         """
         Returns Configuration for the task, de-serialized as type specified in `instance_of`
-
         If the type of the configurable parameters is unknown, a generic
         ConfigurableParameters object with all available parameters can be obtained
         by calling method with instance_of = None.
-
         :example:
             >>> self.get_hyper_parameters(instance_of=TorchSegmentationConfig)
             TorchSegmentationConfig()
-
         :param instance_of: subtype of ModelConfig of the hyper paramters
         """
         if instance_of is None:
@@ -97,11 +94,9 @@ class TaskEnvironment:
     def set_hyper_parameters(self, hyper_parameters: ConfigurableParameters):
         """
         Sets the hyper parameters for the task
-
         :example:
             >>> self.set_hyper_parameters(hyper_parameters=TorchSegmentationParameters())
             None
-
         :param hyper_parameters: ConfigurableParameters entity to assign to task
         """
         if not isinstance(hyper_parameters, ConfigurableParameters):
@@ -113,13 +108,10 @@ class TaskEnvironment:
     def get_model_configuration(self) -> ModelConfiguration:
         """
         Get the configuration needed to use the current model.
-
         That is the current set of:
-
         * configurable parameters
         * labels
         * label schema
-
         :return: Model configuration
         """
         return ModelConfiguration(self.__hyper_parameters, self.label_schema)

@@ -123,7 +123,6 @@ def main():
     override_parameters(updated_hyper_parameters, hyper_parameters)
 
     hyper_parameters = create(hyper_parameters)
-
     # Get classes for Task, ConfigurableParameters and Dataset.
     task_class = get_impl_class(template.entrypoints.base)
     dataset_class = get_dataset_class(template.task_type)
@@ -142,6 +141,7 @@ def main():
         hyper_parameters=hyper_parameters,
         label_schema=generate_label_schema(dataset, template.task_type),
         model_template=template,
+        output_path=args.save_model_to
     )
 
     if args.load_weights:
@@ -190,6 +190,11 @@ def main():
     task.evaluate(resultset)
     assert resultset.performance is not None
     print(resultset.performance)
+
+    with open(osp.join(args.save_model_to, 'performance_result.txt'), 'w') as f:
+        f.write('result: {}'.format(resultset.performance.score.value))
+        
+    f.close()
 
 
 if __name__ == "__main__":

@@ -197,11 +197,6 @@ class OpenVINOSegmentationTask(IDeploymentTask, IInferenceTask, IEvaluationTask,
         if inference_parameters is not None:
             update_progress_callback = inference_parameters.update_progress
             dump_soft_prediction = not inference_parameters.is_evaluation
-<<<<<<< HEAD
-        else:
-            update_progress_callback = default_progress_callback
-            dump_soft_prediction = True
-=======
             process_soft_prediction = inference_parameters.process_saliency_maps
             enable_async_inference = inference_parameters.enable_async_inference
         else:
@@ -209,7 +204,6 @@ class OpenVINOSegmentationTask(IDeploymentTask, IInferenceTask, IEvaluationTask,
             dump_soft_prediction = True
             process_soft_prediction = False
             enable_async_inference = True
->>>>>>> 104992dab (Disable semantic segmentation soft prediction processing (by default) (#2288))
 
         dataset_size = len(dataset)
         for i, dataset_item in enumerate(dataset, 1):

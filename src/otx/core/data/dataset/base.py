@@ -43,11 +43,19 @@ class OTXDataset(Dataset, Generic[T_OTXDataEntity]):
         if callable(self.transforms):
             return self.transforms(entity)
         if isinstance(self.transforms, Iterable):
+<<<<<<< HEAD
             return self._iterable_transforms(entity)
 
         raise TypeError(self.transforms)
 
     def _iterable_transforms(self, item: T_OTXDataEntity) -> Optional[T_OTXDataEntity]:
+=======
+            return self._mmengine_transforms(entity)
+
+        raise TypeError(self.transforms)
+
+    def _mmengine_transforms(self, item: T_OTXDataEntity) -> Optional[T_OTXDataEntity]:
+>>>>>>> 801ddae17 (Initial commit)
         if not isinstance(self.transforms, list):
             raise TypeError(item)
 

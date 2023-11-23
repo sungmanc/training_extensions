@@ -84,7 +84,10 @@ class OTXDataEntity:
 @dataclass
 class OTXPredEntity(OTXDataEntity):
     """Data entity to represent the model output prediction."""
+<<<<<<< HEAD
 
+=======
+>>>>>>> 801ddae17 (Initial commit)
     score: np.ndarray | Tensor
 
 
@@ -129,9 +132,13 @@ class OTXBatchDataEntity(Generic[T_OTXDataEntity]):
             raise RuntimeError(msg)
 
         if not all(entity.image_type == ImageType.TV_IMAGE for entity in entities):
+<<<<<<< HEAD
             msg = (
                 "All entities should be torchvision's Image tensor before collate_fn()"
             )
+=======
+            msg = "All entities should be torchvision's Image tensor before collate_fn()"
+>>>>>>> 801ddae17 (Initial commit)
             raise RuntimeError(msg)
 
         return OTXBatchDataEntity(
@@ -150,7 +157,10 @@ T_OTXBatchPredEntity = TypeVar(
 @dataclass
 class OTXBatchPredEntity(OTXBatchDataEntity):
     """Data entity to represent model output predictions."""
+<<<<<<< HEAD
 
+=======
+>>>>>>> 801ddae17 (Initial commit)
     scores: list[np.ndarray] | list[Tensor]
 
 

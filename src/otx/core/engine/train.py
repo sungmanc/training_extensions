@@ -38,14 +38,22 @@ if TYPE_CHECKING:
     from lightning.pytorch.loggers import Logger
 
 
+<<<<<<< HEAD
 def train(cfg: TrainConfig) -> tuple[Trainer, dict[str, Any]]:
+=======
+def train(cfg: TrainConfig) -> tuple[dict[str, Any], dict[str, Any]]:
+>>>>>>> 801ddae17 (Initial commit)
     """Trains the model. Can additionally evaluate on a testset, using best weights obtained during training.
 
     This method is wrapped in optional @task_wrapper decorator, that controls the behavior during
     failure. Useful for multiruns, saving info about the crash, etc.
 
     :param cfg: A DictConfig configuration composed by Hydra.
+<<<<<<< HEAD
     :return: A tuple with Pytorch Lightning Trainer and Python dict of metrics
+=======
+    :return: A tuple with metrics and dict with all instantiated objects.
+>>>>>>> 801ddae17 (Initial commit)
     """
     from otx.core.data.module import OTXDataModule
     from otx.core.engine.utils.instantiators import (
@@ -110,4 +118,8 @@ def train(cfg: TrainConfig) -> tuple[Trainer, dict[str, Any]]:
     # merge train and test metrics
     metric_dict = {**train_metrics, **test_metrics}
 
+<<<<<<< HEAD
     return trainer, metric_dict
+=======
+    return metric_dict, object_dict
+>>>>>>> 801ddae17 (Initial commit)

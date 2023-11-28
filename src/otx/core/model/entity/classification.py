@@ -7,12 +7,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Union
 
-from torchvision import tv_tensors
-
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.classification import MulticlassClsBatchDataEntity, MulticlassClsBatchPredEntity
 from otx.core.model.entity.base import OTXModel
 from otx.core.utils.config import convert_conf_to_mmconfig_dict
+from otx.algo.model.otx_efficientnet import *
 
 if TYPE_CHECKING:
     from mmpretrain.models.utils import ClsDataPreprocessor
@@ -39,12 +38,16 @@ class MMPretrainCompatibleModel(OTXClassificationModel):
 
     def _create_model(self) -> nn.Module:
         from mmpretrain.registry import MODELS
-
+        data_preprocessor_cfg = self.config.pop("data_preprocessor")
+        converted_data_preprocessor_cfg = convert_conf_to_mmconfig_dict(
+            data_preprocessor_cfg, to="list")
+        converted_cfg = convert_conf_to_mmconfig_dict(self.config, to="tuple")
+        converted_cfg.data_preprocessor = converted_data_preprocessor_cfg.to_dict()
         try:
-            model = MODELS.build(convert_conf_to_mmconfig_dict(self.config, to="tuple"))
+            model = MODELS.build(converted_cfg)
         except AssertionError:
             model = MODELS.build(convert_conf_to_mmconfig_dict(self.config, to="list"))
-
+        
         return model
 
     def _customize_inputs(self, entity: MulticlassClsBatchDataEntity) -> dict[str, Any]:
@@ -78,7 +81,7 @@ class MMPretrainCompatibleModel(OTXClassificationModel):
         ):
             preprocessor = preprocessor.to(device=model_device)
             self.model.data_preprocessor = preprocessor
-
+            
         mmpretrain_inputs = preprocessor(data=mmpretrain_inputs, training=self.training)
 
         mmpretrain_inputs["mode"] = "loss" if self.training else "predict"

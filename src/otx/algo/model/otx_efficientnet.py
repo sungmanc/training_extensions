@@ -517,7 +517,7 @@ class EfficientNet(nn.Module):
 
         y = self.features(x)
         if return_featuremaps:
-            return y
+            return (y,)
 
         glob_features = self._glob_feature_vector(y, self.pooling_type, reduce_dims=False)
 

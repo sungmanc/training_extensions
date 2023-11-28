@@ -12,6 +12,8 @@ from otx.core.data.entity.classification import MulticlassClsBatchDataEntity, Mu
 from otx.core.model.entity.base import OTXModel
 from otx.core.utils.config import convert_conf_to_mmconfig_dict
 from otx.algo.model.otx_efficientnet import *
+from otx.algo.model.otx_efficientnet_v2 import *
+from otx.algo.model.otx_mobilenet_v3 import *
 
 if TYPE_CHECKING:
     from mmpretrain.models.utils import ClsDataPreprocessor

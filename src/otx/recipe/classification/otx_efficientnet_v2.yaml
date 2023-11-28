@@ -51,9 +51,7 @@ model:
   otx_model:
     config:
       backbone:
-        version: b0
-        pretrained: true
-        type: OTXEfficientNet
+        type: OTXEfficientNetV2
       head:
         act_cfg:
           type: HSwish

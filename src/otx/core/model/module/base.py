@@ -38,7 +38,6 @@ class OTXLitModule(LightningModule):
     def training_step(self, inputs: OTXBatchDataEntity, batch_idx: int) -> Tensor:
         """Step for model training."""
         train_loss = self.model(inputs)
-
         if isinstance(train_loss, Tensor):
             self.log(
                 "train/loss",
@@ -58,10 +57,10 @@ class OTXLitModule(LightningModule):
                     prog_bar=True,
                 )
 
-            train_loss = sum(train_loss.values())
+            total_train_loss = sum(train_loss.values())
             self.log(
-                "train/loss",
-                train_loss,
+                "train/total_loss",
+                total_train_loss,
                 on_step=True,
                 on_epoch=False,
                 prog_bar=True,

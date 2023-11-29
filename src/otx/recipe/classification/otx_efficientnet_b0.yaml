@@ -6,38 +6,15 @@ defaults:
 data:
   subsets:
     train:
-      batch_size: 128
+      batch_size: 64
       transforms:
       - type: LoadImageFromFile
       - backend: pillow
         scale: 224
         type: RandomResizedCrop
-      - direction: horizontal
-        prob: 0.5
-        type: RandomFlip
-      - hparams:
-          pad_val:
-          - 104
-          - 116
-          - 124
-        policies: imagenet
-        type: AutoAugment
-      - erase_prob: 0.2
-        fill_color:
-        - 103.53
-        - 116.28
-        - 123.675
-        fill_std:
-        - 57.375
-        - 57.12
-        - 58.395
-        max_area_ratio: 0.3333333333333333
-        min_area_ratio: 0.02
-        mode: rand
-        type: RandomErasing
       - type: PackInputs
     val:
-      batch_size: 128
+      batch_size: 64
       transforms:
       - type: LoadImageFromFile
       - backend: pillow
@@ -90,3 +67,12 @@ model:
         to_rgb: True
         type: ClsDataPreprocessor
       type: ImageClassifier
+  optimizer:
+    _target_: torch.optim.SGD
+    _partial_: true
+    lr: 0.0049
+    momentum: 0.9
+    weight_decay: 0.0001
+  scheduler:
+    factor: 0.5
+    patience: 1

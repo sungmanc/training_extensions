@@ -36,6 +36,7 @@ class MMPretrainCompatibleModel(OTXClassificationModel):
 
     def __init__(self, config: DictConfig) -> None:
         self.config = config
+        self.load_from = config.pop("load_from", None)
         super().__init__()
 
     def _create_model(self) -> nn.Module:
@@ -49,7 +50,8 @@ class MMPretrainCompatibleModel(OTXClassificationModel):
             model = MODELS.build(converted_cfg)
         except AssertionError:
             model = MODELS.build(convert_conf_to_mmconfig_dict(self.config, to="list"))
-        
+        if self.load_from is not None:
+            load_checkpoint(model, self.load_from)
         return model
 
     def _customize_inputs(self, entity: MulticlassClsBatchDataEntity) -> dict[str, Any]:

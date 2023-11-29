@@ -6,38 +6,15 @@ defaults:
 data:
   subsets:
     train:
-      batch_size: 128
+      batch_size: 64
       transforms:
       - type: LoadImageFromFile
       - backend: pillow
         scale: 224
         type: RandomResizedCrop
-      - direction: horizontal
-        prob: 0.5
-        type: RandomFlip
-      - hparams:
-          pad_val:
-          - 104
-          - 116
-          - 124
-        policies: imagenet
-        type: AutoAugment
-      - erase_prob: 0.2
-        fill_color:
-        - 103.53
-        - 116.28
-        - 123.675
-        fill_std:
-        - 57.375
-        - 57.12
-        - 58.395
-        max_area_ratio: 0.3333333333333333
-        min_area_ratio: 0.02
-        mode: rand
-        type: RandomErasing
       - type: PackInputs
     val:
-      batch_size: 128
+      batch_size: 64
       transforms:
       - type: LoadImageFromFile
       - backend: pillow
@@ -51,15 +28,19 @@ model:
   otx_model:
     config:
       backbone:
-        arch: deit-small
+        arch: deit-tiny
         type: VisionTransformer
         img_size: 224
         patch_size: 16
+        init_cfg:
+          prefix: backbone
+          checkpoint: https://download.openmmlab.com/mmclassification/v0/deit/deit-tiny_pt-4xb256_in1k_20220218-13b382a0.pth
+          type: Pretrained
       head:
         loss:
           loss_weight: 1.0
           type: CrossEntropyLoss
-        in_channels: 384
+        in_channels: 192
         num_classes: 1000
         type: VisionTransformerClsHead
       data_preprocessor:
@@ -83,3 +64,12 @@ model:
           layer: LayerNorm
           type: Constant
       type: ImageClassifier
+  optimizer:
+    _target_: torch.optim.SGD
+    _partial_: true
+    lr: 0.0001
+    momentum: 0.9
+    weight_decay: 0.0001
+  scheduler:
+    factor: 0.5
+    patience: 1

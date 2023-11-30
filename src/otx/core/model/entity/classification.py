@@ -7,13 +7,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Union
 
+from mmengine.runner import load_checkpoint
 from otx.core.data.entity.base import OTXBatchLossEntity
 from otx.core.data.entity.classification import MulticlassClsBatchDataEntity, MulticlassClsBatchPredEntity
 from otx.core.model.entity.base import OTXModel
 from otx.core.utils.config import convert_conf_to_mmconfig_dict
-from otx.algo.model.otx_efficientnet import *
-from otx.algo.model.otx_efficientnet_v2 import *
-from otx.algo.model.otx_mobilenet_v3 import *
+from otx.algo.classification.model import * # To register the algo models
 
 if TYPE_CHECKING:
     from mmpretrain.models.utils import ClsDataPreprocessor
@@ -24,8 +23,6 @@ if TYPE_CHECKING:
 class OTXClassificationModel(OTXModel[MulticlassClsBatchDataEntity, MulticlassClsBatchPredEntity]):
     """Base class for the classification models used in OTX."""
 
-# This is an example for MMpretrain models
-# In this way, we can easily import some models developed from the MM community
 class MMPretrainCompatibleModel(OTXClassificationModel):
     """Classification model compatible for MMPretrain.
 
@@ -41,17 +38,24 @@ class MMPretrainCompatibleModel(OTXClassificationModel):
 
     def _create_model(self) -> nn.Module:
         from mmpretrain.registry import MODELS
+        ### DataPreprocessor config should be converted as tuple
+        ### If not, it MODELS.build() creates the empty data preprocessor
+        ### That's the reason why I added the lines below
         data_preprocessor_cfg = self.config.pop("data_preprocessor")
         converted_data_preprocessor_cfg = convert_conf_to_mmconfig_dict(
             data_preprocessor_cfg, to="list")
-        converted_cfg = convert_conf_to_mmconfig_dict(self.config, to="tuple")
-        converted_cfg.data_preprocessor = converted_data_preprocessor_cfg.to_dict()
         try:
+            converted_cfg = convert_conf_to_mmconfig_dict(self.config, to="tuple")
+            converted_cfg.data_preprocessor = converted_data_preprocessor_cfg.to_dict()
             model = MODELS.build(converted_cfg)
         except AssertionError:
-            model = MODELS.build(convert_conf_to_mmconfig_dict(self.config, to="list"))
+            converted_cfg = convert_conf_to_mmconfig_dict(self.config, to="list")
+            converted_cfg.data_preprocessor = converted_data_preprocessor_cfg.to_dict()
+            model = MODELS.build(converted_cfg)
+        
         if self.load_from is not None:
             load_checkpoint(model, self.load_from)
+            
         return model
 
     def _customize_inputs(self, entity: MulticlassClsBatchDataEntity) -> dict[str, Any]:

@@ -41,7 +41,6 @@ class PackInputs(MMPretrainPackInputs):
         scale_factor = data_samples.metainfo.get("scale_factor", (1.0, 1.0))
 
         labels = results["__otx__"].labels
-        #labels = data_samples.gt_instances.labels
 
         return MulticlassClsDataEntity(
             image=image,

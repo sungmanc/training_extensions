@@ -8,9 +8,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 
 from mmpretrain.datasets.transforms import (
-    PackInputs as MMPretrainPackInputs,    
-) 
-
+    PackInputs as MMPretrainPackInputs,
+)
 from mmpretrain.registry import TRANSFORMS
 from torchvision import tv_tensors
 
@@ -67,7 +66,7 @@ class MMPretrainTransformLib(MMCVTransformLib):
     def generate(cls, config: SubsetConfig) -> list[Callable]:
         """Generate MMPretrain transforms from the configuration."""
         transforms = super().generate(config)
-        
+
         cls._check_mandatory_transforms(
             transforms,
             mandatory_transforms={PackInputs},

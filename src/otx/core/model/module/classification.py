@@ -4,8 +4,6 @@
 """Class definition for classification lightning module used in OTX."""
 from __future__ import annotations
 
-import logging as log
-
 import torch
 from torch import Tensor
 from torchmetrics.classification.accuracy import Accuracy
@@ -77,8 +75,8 @@ class OTXClassificationLitModule(OTXLitModule):
         pred = torch.tensor(preds.labels)
         target = torch.tensor(inputs.labels)
         return {
-            "preds": pred, 
-            "target": target
+            "preds": pred,
+            "target": target,
         }
 
     def test_step(self, inputs: MulticlassClsBatchDataEntity, batch_idx: int) -> None:

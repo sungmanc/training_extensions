@@ -70,7 +70,7 @@ class MMCVTransformLib:
         for cfg in config.transforms:
             builder = cls.get_builder()
             converted_cfg = convert_conf_to_mmconfig_dict(cfg)
-            
+
             build_cfg_type = builder.get(converted_cfg.type)
             # TODO(sungmanc): Need to consider the mmpretrain case
             # Both MMPretrain and MMCV have `LoadImageFromFile` transform

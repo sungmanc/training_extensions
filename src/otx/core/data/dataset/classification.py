@@ -9,7 +9,7 @@ from typing import Callable, Optional
 
 import cv2
 import torch
-from datumaro import Label, DatasetSubset, Image
+from datumaro import DatasetSubset, Image, Label
 
 from otx.core.data.entity.base import ImageInfo
 from otx.core.data.entity.classification import MulticlassClsBatchDataEntity, MulticlassClsDataEntity
@@ -34,7 +34,7 @@ class OTXMulticlassClsDataset(OTXDataset[MulticlassClsDataEntity]):
         if img_data.shape[-1] == 4:
             img_data = cv2.cvtColor(img_data, cv2.COLOR_BGRA2BGR)
         img_shape = img.size
-        
+
         label_anns = [ann for ann in item.annotations if isinstance(ann, Label)]
 
         entity = MulticlassClsDataEntity(

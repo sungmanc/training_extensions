@@ -1,15 +1,13 @@
-"""Implementation of EfficientNetV2.
+# Copyright (C) 2023 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+"""EfficientNetV2 model.
 
 Original papers:
 - 'EfficientNetV2: Smaller Models and Faster Training,' https://arxiv.org/abs/2104.00298,
 - 'Adversarial Examples Improve Image Recognition,' https://arxiv.org/abs/1911.09665.
 """
 
-# Copyright (C) 2022 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-#
-
-# pylint: disable=unused-argument, invalid-name
 
 import os
 

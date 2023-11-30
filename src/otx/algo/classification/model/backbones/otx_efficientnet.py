@@ -513,8 +513,8 @@ class EfficientNet(nn.Module):
     def forward(self, x, return_featuremaps=False, get_embeddings=False):
         """Forward."""
         if self.input_IN is not None:
-            x = self.input_IN(x)  # pylint: disable=not-callable
-
+            x = self.input_IN(x)
+             
         y = self.features(x)
         if return_featuremaps:
             return (y,)

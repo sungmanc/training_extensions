@@ -1,29 +1,29 @@
 # @package _global_
 defaults:
-- override /base: classification
-- override /data: mmpretrain
-- override /model: mmpretrain
+  - override /base: classification
+  - override /data: mmpretrain
+  - override /model: mmpretrain
 data:
   subsets:
     train:
       batch_size: 64
       transforms:
-      - type: LoadImageFromFile
-      - backend: pillow
-        scale: 224
-        type: RandomResizedCrop
-      - type: PackInputs
+        - type: LoadImageFromFile
+        - backend: pillow
+          scale: 224
+          type: RandomResizedCrop
+        - type: PackInputs
     val:
       batch_size: 64
       transforms:
-      - type: LoadImageFromFile
-      - backend: pillow
-        edge: short
-        scale: 256
-        type: ResizeEdge
-      - crop_size: 224
-        type: CenterCrop
-      - type: PackInputs
+        - type: LoadImageFromFile
+        - backend: pillow
+          edge: short
+          scale: 256
+          type: ResizeEdge
+        - crop_size: 224
+          type: CenterCrop
+        - type: PackInputs
 model:
   otx_model:
     config:
@@ -46,11 +46,11 @@ model:
           loss_weight: 1.0
           type: CrossEntropyLoss
         mid_channels:
-        - 1280
+          - 1280
         num_classes: 1000
         topk:
-        - 1
-        - 5
+          - 1
+          - 5
         type: StackedLinearClsHead
       neck:
         type: GlobalAveragePooling

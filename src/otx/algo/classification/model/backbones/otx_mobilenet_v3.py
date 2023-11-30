@@ -1,15 +1,11 @@
+# Copyright (C) 2022 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
 """Implementation of MobileNetV3.
 
 Original papers:
 - 'Searching for MobileNetV3,' https://arxiv.org/abs/1905.02244.
 """
-
-# Copyright (C) 2022 Intel Corporation
-# SPDX-License-Identifier: Apache-2.0
-#
-
-# pylint: disable=invalid-name, too-many-arguments, unused-argument
-# pylint: disable=too-many-locals, too-many-instance-attributes, abstract-method
 
 import math
 import os
@@ -246,12 +242,11 @@ class MobileNetV3Base(ModelInterface):
     def forward(self, x, return_featuremaps=False, get_embeddings=False, gt_labels=None):
         """Forward."""
         if self.input_IN is not None:
-            x = self.input_IN(x)  # pylint: disable=not-callable
+            x = self.input_IN(x) 
 
         y = self.extract_features(x)
         if return_featuremaps:
             return y
-        # should be checked
         return y
 
 

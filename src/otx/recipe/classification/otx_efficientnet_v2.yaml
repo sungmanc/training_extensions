@@ -31,6 +31,7 @@ model:
   otx_model:
     config:
       backbone:
+        pretrained: true
         type: OTXEfficientNetV2
       head:
         act_cfg:

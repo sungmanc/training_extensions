@@ -34,6 +34,7 @@ class OTXDataModule(LightningDataModule):
         self.config = config
         self.subsets: dict[str, OTXDataset] = {}
         self.save_hyperparameters()
+
         dataset = DmDataset.import_from(
             self.config.data_root,
             format=self.config.data_format,

@@ -60,13 +60,13 @@ class OTXLitModule(LightningModule):
 
             total_train_loss = sum(train_loss.values())
             self.log(
-                "train/total_loss",
+                "train/loss",
                 total_train_loss,
                 on_step=True,
                 on_epoch=False,
                 prog_bar=True,
             )
-            return train_loss
+            return total_train_loss
 
         raise TypeError(train_loss)
 

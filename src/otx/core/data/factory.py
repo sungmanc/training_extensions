@@ -62,7 +62,7 @@ class OTXDatasetFactory:
             
             return OTXMulticlassClsDataset(dm_subset, transforms)
         
-        if task == OTXTaskType.DETECTION:
+        elif task == OTXTaskType.DETECTION:
             from .dataset.detection import OTXDetectionDataset
 
             return OTXDetectionDataset(dm_subset, transforms)

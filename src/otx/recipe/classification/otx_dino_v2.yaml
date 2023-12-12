@@ -81,6 +81,3 @@ model:
   optimizer:
     _target_: torch.optim.AdamW
     lr: 1e-5
-  scheduler:
-    factor: 0.5
-    patience: 1
